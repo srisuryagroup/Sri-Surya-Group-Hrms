@@ -128,7 +128,7 @@ function PayrollPage() {
           <>
             {isManager && (
               <Button
-                onClick={() => setEditing({ month: now.getMonth() + 1, year, payment_status: "pending" }) || setOpen(true)}
+                onClick={() => { setEditing({ month: now.getMonth() + 1, year, payment_status: "pending" }); setOpen(true); }}
                 className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90"
               >
                 <Plus className="mr-1.5 h-4 w-4" />Add payroll

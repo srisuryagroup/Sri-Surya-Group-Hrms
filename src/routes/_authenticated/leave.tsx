@@ -93,12 +93,15 @@ function LeavePage() {
         description="Apply for leave, review balances and approve or reject requests."
         actions={
           <Button
-            onClick={() => setEditing({
-              employee_id: isManager ? "" : myEmployee?.id,
-              leave_type: "casual",
-              start_date: new Date().toISOString().slice(0, 10),
-              end_date: new Date().toISOString().slice(0, 10),
-            }) || setOpen(true)}
+            onClick={() => {
+              setEditing({
+                employee_id: isManager ? "" : myEmployee?.id,
+                leave_type: "casual",
+                start_date: new Date().toISOString().slice(0, 10),
+                end_date: new Date().toISOString().slice(0, 10),
+              });
+              setOpen(true);
+            }}
             className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90"
           >
             <Plus className="mr-1.5 h-4 w-4" />Apply leave

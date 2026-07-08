@@ -21,6 +21,10 @@ import {
   Search,
   LogOut,
   Loader2,
+  CalendarCheck,
+  ClipboardList,
+  Wallet,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/logo";
@@ -52,8 +56,12 @@ const nav = [
   { to: "/departments", label: "Departments", icon: Building2 },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/tasks", label: "Tasks", icon: CheckSquare },
+  { to: "/attendance", label: "Attendance", icon: CalendarCheck },
+  { to: "/leave", label: "Leave", icon: ClipboardList },
+  { to: "/payroll", label: "Payroll", icon: Wallet },
   { to: "/commissions", label: "Commissions", icon: BadgeIndianRupee },
   { to: "/documents", label: "Documents", icon: FileText },
+  { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;

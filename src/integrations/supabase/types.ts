@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
+      attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          date: string
+          employee_id: string
+          hours_worked: number | null
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date: string
+          employee_id: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date?: string
+          employee_id?: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commissions: {
         Row: {
           amount: number | null
@@ -349,6 +426,62 @@ export type Database = {
         }
         Relationships: []
       }
+      leave_requests: {
+        Row: {
+          created_at: string
+          days: number
+          employee_id: string
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          days: number
+          employee_id: string
+          end_date: string
+          id?: string
+          leave_type: string
+          reason?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          days?: number
+          employee_id?: string
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           category: string | null
@@ -381,6 +514,77 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      payroll: {
+        Row: {
+          allowances: number
+          basic_salary: number
+          bonus: number
+          created_at: string
+          employee_id: string
+          esi: number
+          id: string
+          month: number
+          net_salary: number
+          notes: string | null
+          other_deductions: number
+          paid_on: string | null
+          payment_status: string
+          payslip_url: string | null
+          pf: number
+          tax: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          allowances?: number
+          basic_salary?: number
+          bonus?: number
+          created_at?: string
+          employee_id: string
+          esi?: number
+          id?: string
+          month: number
+          net_salary?: number
+          notes?: string | null
+          other_deductions?: number
+          paid_on?: string | null
+          payment_status?: string
+          payslip_url?: string | null
+          pf?: number
+          tax?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          allowances?: number
+          basic_salary?: number
+          bonus?: number
+          created_at?: string
+          employee_id?: string
+          esi?: number
+          id?: string
+          month?: number
+          net_salary?: number
+          notes?: string | null
+          other_deductions?: number
+          paid_on?: string | null
+          payment_status?: string
+          payslip_url?: string | null
+          pf?: number
+          tax?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -543,6 +747,7 @@ export type Database = {
     }
     Functions: {
       can_manage: { Args: { _user_id: string }; Returns: boolean }
+      current_user_email: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

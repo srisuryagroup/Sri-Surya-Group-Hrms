@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -22,7 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, FolderKanban, Pencil, Trash2, Loader2, Calendar, IndianRupee } from "lucide-react";
+import { Plus, FolderKanban, Pencil, Trash2, Loader2, Calendar, IndianRupee, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,16 +39,25 @@ type Project = {
   priority?: string; status?: string; progress?: number;
 };
 
+// Cast to bypass generated types (tables added post-gen)
+const db = supabase as any;
+
 function ProjectsPage() {
   const { isManager } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Project> | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [assignFor, setAssignFor] = useState<any | null>(null);
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => ((await supabase.from("projects").select("*").order("created_at", { ascending: false })).data ?? []) as any[],
+  });
+
+  const { data: allAssignments } = useQuery({
+    queryKey: ["project_assignments_all"],
+    queryFn: async () => ((await db.from("project_assignments").select("id, project_id, assignee_type, assignee_id, role")).data ?? []) as any[],
   });
 
   const upsertMut = useMutation({
@@ -76,6 +85,9 @@ function ProjectsPage() {
   });
 
   const filtered = (rows ?? []).filter((r: any) => statusFilter === "all" || r.status === statusFilter);
+
+  const countAssignees = (pid: string) =>
+    (allAssignments ?? []).filter((a: any) => a.project_id === pid).length;
 
   return (
     <div className="space-y-6">
@@ -131,23 +143,31 @@ function ProjectsPage() {
                   </div>
                   <Progress value={p.progress ?? 0} className="h-2" />
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <IndianRupee className="h-3.5 w-3.5" />{p.budget ? `${(Number(p.budget) / 100000).toFixed(1)}L` : "—"}
                   </div>
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />{p.end_date ? format(new Date(p.end_date), "MMM yyyy") : "—"}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setAssignFor(p)}
+                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition"
+                  >
+                    <Users className="h-3.5 w-3.5" />{countAssignees(p.id)} assigned
+                  </button>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
                   <StatusPill v={p.status} />
                   {isManager && (
                     <div className="flex gap-1 opacity-0 transition group-hover:opacity-100">
+                      <Button size="icon" variant="ghost" onClick={() => setAssignFor(p)} title="Assign team"><Users className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(p); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
                         <AlertDialogContent>
-                          <AlertDialogHeader><AlertDialogTitle>Delete project?</AlertDialogTitle><AlertDialogDescription>Tasks under this project will also be removed.</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogHeader><AlertDialogTitle>Delete project?</AlertDialogTitle><AlertDialogDescription>Tasks and assignments under this project will also be removed.</AlertDialogDescription></AlertDialogHeader>
                           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteMut.mutate(p.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction></AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -205,7 +225,124 @@ function ProjectsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AssignTeamDialog
+        project={assignFor}
+        canEdit={isManager}
+        onClose={() => setAssignFor(null)}
+      />
     </div>
+  );
+}
+
+function AssignTeamDialog({ project, canEdit, onClose }: { project: any | null; canEdit: boolean; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [type, setType] = useState<"employee" | "freelancer">("employee");
+  const [pickId, setPickId] = useState("");
+  const [role, setRole] = useState("");
+
+  const { data: employees } = useQuery({
+    queryKey: ["employees-min"],
+    queryFn: async () => ((await supabase.from("employees").select("id, full_name").order("full_name")).data ?? []) as any[],
+    enabled: !!project,
+  });
+  const { data: freelancers } = useQuery({
+    queryKey: ["freelancers-min"],
+    queryFn: async () => ((await supabase.from("freelancers").select("id, full_name").order("full_name")).data ?? []) as any[],
+    enabled: !!project,
+  });
+  const { data: assignments } = useQuery({
+    queryKey: ["project_assignments", project?.id],
+    queryFn: async () => ((await db.from("project_assignments").select("*").eq("project_id", project.id)).data ?? []) as any[],
+    enabled: !!project,
+  });
+
+  const addMut = useMutation({
+    mutationFn: async () => {
+      if (!pickId) throw new Error("Pick a person");
+      const { error } = await db.from("project_assignments").insert({
+        project_id: project.id, assignee_type: type, assignee_id: pickId, role: role || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project_assignments", project.id] });
+      qc.invalidateQueries({ queryKey: ["project_assignments_all"] });
+      setPickId(""); setRole(""); toast.success("Assigned");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const removeMut = useMutation({
+    mutationFn: async (id: string) => { const { error } = await db.from("project_assignments").delete().eq("id", id); if (error) throw error; },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project_assignments", project.id] });
+      qc.invalidateQueries({ queryKey: ["project_assignments_all"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const nameOf = (a: any) => {
+    const list = a.assignee_type === "employee" ? employees : freelancers;
+    return list?.find((x: any) => x.id === a.assignee_id)?.full_name ?? a.assignee_id.slice(0, 8);
+  };
+
+  const pool = type === "employee" ? (employees ?? []) : (freelancers ?? []);
+  const assignedIds = new Set((assignments ?? []).filter((a: any) => a.assignee_type === type).map((a: any) => a.assignee_id));
+
+  return (
+    <Dialog open={!!project} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Team — {project?.name}</DialogTitle>
+          <DialogDescription>Assign employees and freelancers to this project.</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+          {(assignments ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground py-2">No one assigned yet.</p>
+          ) : (assignments ?? []).map((a: any) => (
+            <div key={a.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-card/40 p-2 pl-3">
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate">{nameOf(a)}</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {a.assignee_type}{a.role ? ` • ${a.role}` : ""}
+                </div>
+              </div>
+              {canEdit && (
+                <Button size="icon" variant="ghost" onClick={() => removeMut.mutate(a.id)} className="text-destructive">
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {canEdit && (
+          <div className="grid grid-cols-1 gap-2 border-t border-border/40 pt-3 sm:grid-cols-[120px_1fr_1fr_auto]">
+            <Select value={type} onValueChange={(v) => { setType(v as any); setPickId(""); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="employee">Employee</SelectItem>
+                <SelectItem value="freelancer">Freelancer</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={pickId} onValueChange={setPickId}>
+              <SelectTrigger><SelectValue placeholder="Select person" /></SelectTrigger>
+              <SelectContent>
+                {pool.filter((x: any) => !assignedIds.has(x.id)).map((x: any) => (
+                  <SelectItem key={x.id} value={x.id}>{x.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input placeholder="Role (optional)" value={role} onChange={(e) => setRole(e.target.value)} />
+            <Button onClick={() => addMut.mutate()} disabled={addMut.isPending || !pickId} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
+              {addMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 

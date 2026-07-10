@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -22,16 +22,18 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
-import { Plus, CheckSquare, Pencil, Trash2, Loader2, Search } from "lucide-react";
+import { Plus, CheckSquare, Pencil, Trash2, Loader2, Search, MessageSquare, Paperclip, Download, X, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/tasks")({
   head: () => ({ meta: [{ title: "Tasks — Sri Surya Group HRMS" }] }),
   component: TasksPage,
 });
+
+const db = supabase as any;
 
 function TasksPage() {
   const { isManager } = useAuth();
@@ -40,10 +42,19 @@ function TasksPage() {
   const [statusF, setStatusF] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [detailsFor, setDetailsFor] = useState<any | null>(null);
 
   const { data: projects } = useQuery({
     queryKey: ["projects-min"],
     queryFn: async () => (await supabase.from("projects").select("id,name").order("name")).data ?? [],
+  });
+  const { data: employees } = useQuery({
+    queryKey: ["employees-min"],
+    queryFn: async () => (await supabase.from("employees").select("id, full_name").order("full_name")).data ?? [],
+  });
+  const { data: freelancers } = useQuery({
+    queryKey: ["freelancers-min"],
+    queryFn: async () => (await supabase.from("freelancers").select("id, full_name").order("full_name")).data ?? [],
   });
   const { data: rows, isLoading } = useQuery({
     queryKey: ["tasks"],
@@ -64,6 +75,12 @@ function TasksPage() {
       const c: any = { ...p };
       Object.keys(c).forEach((k) => { if (c[k] === "") c[k] = null; });
       delete c.projects;
+      // Derive assignee_name from selected person for display
+      if (c.assignee_type && c.assignee_id) {
+        const pool = c.assignee_type === "employee" ? employees : freelancers;
+        const person = pool?.find((x: any) => x.id === c.assignee_id);
+        if (person) c.assignee_name = person.full_name;
+      }
       if (c.id) { const { error } = await supabase.from("tasks").update(c).eq("id", c.id); if (error) throw error; }
       else { delete c.id; const { error } = await supabase.from("tasks").insert(c); if (error) throw error; }
     },
@@ -82,13 +99,15 @@ function TasksPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 
+  const pool = (editing?.assignee_type ?? "employee") === "employee" ? (employees ?? []) : (freelancers ?? []);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Tasks"
         description="Assign, track and complete work across all projects."
         actions={isManager && (
-          <Button onClick={() => { setEditing({ name: "", status: "pending", priority: "medium" }); setOpen(true); }} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
+          <Button onClick={() => { setEditing({ name: "", status: "pending", priority: "medium", assignee_type: "employee" }); setOpen(true); }} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
             <Plus className="mr-1.5 h-4 w-4" />New Task
           </Button>
         )}
@@ -151,18 +170,23 @@ function TasksPage() {
                       ) : <Badge variant="secondary" className={statusCls(t.status)}>{t.status.replace("_", " ")}</Badge>}
                     </TableCell>
                     <TableCell className="text-right">
-                      {isManager && (
-                        <div className="flex justify-end gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader><AlertDialogTitle>Delete task?</AlertDialogTitle><AlertDialogDescription>{t.name}</AlertDialogDescription></AlertDialogHeader>
-                              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteMut.mutate(t.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction></AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      )}
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => setDetailsFor(t)} title="Comments & attachments">
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                        {isManager && (
+                          <>
+                            <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader><AlertDialogTitle>Delete task?</AlertDialogTitle><AlertDialogDescription>{t.name}</AlertDialogDescription></AlertDialogHeader>
+                                <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteMut.mutate(t.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction></AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -184,7 +208,21 @@ function TasksPage() {
                   <SelectContent>{(projects ?? []).map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                 </Select>
               </F>
-              <F label="Assignee name"><Input value={editing.assignee_name ?? ""} onChange={(e) => setEditing({ ...editing, assignee_name: e.target.value })} /></F>
+              <F label="Assignee type">
+                <Select value={editing.assignee_type ?? "employee"} onValueChange={(v) => setEditing({ ...editing, assignee_type: v, assignee_id: null })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="employee">Employee</SelectItem>
+                    <SelectItem value="freelancer">Freelancer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Assignee">
+                <Select value={editing.assignee_id ?? ""} onValueChange={(v) => setEditing({ ...editing, assignee_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select person" /></SelectTrigger>
+                  <SelectContent>{pool.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </F>
               <F label="Due date"><Input type="date" value={editing.due_date ?? ""} onChange={(e) => setEditing({ ...editing, due_date: e.target.value })} /></F>
               <F label="Priority">
                 <Select value={editing.priority ?? "medium"} onValueChange={(v) => setEditing({ ...editing, priority: v })}>
@@ -209,7 +247,161 @@ function TasksPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <TaskDetailsDialog task={detailsFor} onClose={() => setDetailsFor(null)} />
     </div>
+  );
+}
+
+function TaskDetailsDialog({ task, onClose }: { task: any | null; onClose: () => void }) {
+  const { user, isManager } = useAuth();
+  const qc = useQueryClient();
+  const [body, setBody] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const { data: comments } = useQuery({
+    queryKey: ["task_comments", task?.id],
+    queryFn: async () => ((await db.from("task_comments").select("*").eq("task_id", task.id).order("created_at", { ascending: true })).data ?? []) as any[],
+    enabled: !!task,
+  });
+  const { data: attachments } = useQuery({
+    queryKey: ["task_attachments", task?.id],
+    queryFn: async () => ((await db.from("task_attachments").select("*").eq("task_id", task.id).order("created_at", { ascending: false })).data ?? []) as any[],
+    enabled: !!task,
+  });
+
+  const addComment = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sign in required");
+      if (!body.trim()) throw new Error("Empty comment");
+      const { error } = await db.from("task_comments").insert({
+        task_id: task.id, user_id: user.id,
+        author_name: user.user_metadata?.full_name || user.email,
+        body: body.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => { setBody(""); qc.invalidateQueries({ queryKey: ["task_comments", task.id] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const delComment = useMutation({
+    mutationFn: async (id: string) => { const { error } = await db.from("task_comments").delete().eq("id", id); if (error) throw error; },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["task_comments", task.id] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const upload = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      const path = `task-attachments/${task.id}/${crypto.randomUUID()}-${file.name}`;
+      const { error: upErr } = await supabase.storage.from("hrms-files").upload(path, file, { upsert: false });
+      if (upErr) throw upErr;
+      const { error } = await db.from("task_attachments").insert({
+        task_id: task.id, uploaded_by: user.id,
+        file_name: file.name, file_path: path, file_size: file.size, mime_type: file.type,
+      });
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["task_attachments", task.id] });
+      toast.success("Uploaded");
+    } catch (e: any) { toast.error(e.message); }
+    finally { setUploading(false); }
+  };
+
+  const download = async (a: any) => {
+    const { data, error } = await supabase.storage.from("hrms-files").createSignedUrl(a.file_path, 60);
+    if (error) { toast.error(error.message); return; }
+    window.open(data.signedUrl, "_blank");
+  };
+
+  const delAttachment = useMutation({
+    mutationFn: async (a: any) => {
+      await supabase.storage.from("hrms-files").remove([a.file_path]);
+      const { error } = await db.from("task_attachments").delete().eq("id", a.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["task_attachments", task.id] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={!!task} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{task?.name}</DialogTitle>
+          <DialogDescription>Comments and file attachments.</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <section>
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+              <Paperclip className="h-4 w-4" /> Attachments
+            </div>
+            <div className="space-y-1.5">
+              {(attachments ?? []).length === 0 && <p className="text-xs text-muted-foreground">No attachments yet.</p>}
+              {(attachments ?? []).map((a: any) => (
+                <div key={a.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-card/40 p-2 pl-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm">{a.file_name}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {a.file_size ? `${(a.file_size / 1024).toFixed(0)} KB • ` : ""}
+                      {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+                    </div>
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={() => download(a)}><Download className="h-4 w-4" /></Button>
+                  {(a.uploaded_by === user?.id || isManager) && (
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => delAttachment.mutate(a)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-card/40 px-3 py-1.5 text-xs hover:bg-accent">
+                {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
+                {uploading ? "Uploading…" : "Attach file"}
+                <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} disabled={uploading} />
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+              <MessageSquare className="h-4 w-4" /> Comments
+            </div>
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {(comments ?? []).length === 0 && <p className="text-xs text-muted-foreground">Be the first to comment.</p>}
+              {(comments ?? []).map((c: any) => (
+                <div key={c.id} className="rounded-lg border border-border/40 bg-card/40 p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold">{c.author_name ?? "User"}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-[11px] text-muted-foreground">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</div>
+                      {(c.user_id === user?.id || isManager) && (
+                        <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => delComment.mutate(c.id)}>
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm">{c.body}</p>
+                </div>
+              ))}
+            </div>
+            {user && (
+              <form onSubmit={(e) => { e.preventDefault(); addComment.mutate(); }} className="mt-2 flex gap-2">
+                <Textarea rows={2} placeholder="Add a comment…" value={body} onChange={(e) => setBody(e.target.value)} />
+                <Button type="submit" disabled={addComment.isPending || !body.trim()} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
+                  {addComment.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
+              </form>
+            )}
+          </section>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

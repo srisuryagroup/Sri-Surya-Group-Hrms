@@ -22,7 +22,7 @@ import { ClipboardList, Plus, Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, differenceInCalendarDays } from "date-fns";
+import { format, differenceInCalendarDays, startOfMonth, endOfMonth, eachDayOfInterval, getDay, parseISO, isWithinInterval } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/leave")({
   head: () => ({ meta: [{ title: "Leave — Sri Surya Group HRMS" }] }),

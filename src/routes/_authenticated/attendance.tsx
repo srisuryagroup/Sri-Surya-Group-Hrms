@@ -42,6 +42,7 @@ function AttendancePage() {
   const { user, isManager } = useAuth();
   const qc = useQueryClient();
   const [filterDate, setFilterDate] = useState(new Date().toISOString().slice(0, 10));
+  const [calMonth, setCalMonth] = useState(new Date().toISOString().slice(0, 7));
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 

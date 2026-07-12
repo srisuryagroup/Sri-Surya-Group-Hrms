@@ -21,7 +21,7 @@ import { CalendarCheck, Plus, LogIn, LogOut, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getDay } from "date-fns";
 import { exportToCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/attendance")({

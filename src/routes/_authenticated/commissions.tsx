@@ -34,11 +34,17 @@ function CommissionsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: rows, isLoading } = useQuery({
+  const { data: allRows, isLoading } = useQuery({
     queryKey: ["commissions"],
     queryFn: async () => ((await supabase.from("commissions").select("*").order("created_at", { ascending: false })).data ?? []) as any[],
   });
+  const rows = (allRows ?? []).filter((r: any) =>
+    (typeFilter === "all" || r.commission_type === typeFilter) &&
+    (statusFilter === "all" || r.payment_status === statusFilter)
+  );
 
   const upsertMut = useMutation({
     mutationFn: async (p: any) => {

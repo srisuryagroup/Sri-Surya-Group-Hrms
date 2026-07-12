@@ -21,7 +21,7 @@ import { CalendarCheck, Plus, LogIn, LogOut, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getDay } from "date-fns";
 import { exportToCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/attendance")({
@@ -42,6 +42,7 @@ function AttendancePage() {
   const { user, isManager } = useAuth();
   const qc = useQueryClient();
   const [filterDate, setFilterDate] = useState(new Date().toISOString().slice(0, 10));
+  const [calMonth, setCalMonth] = useState(new Date().toISOString().slice(0, 7));
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 
@@ -126,6 +127,36 @@ function AttendancePage() {
       wfh: r.filter((x) => x.status === "work_from_home").length,
     };
   }, [rows]);
+  const monthStart = startOfMonth(new Date(calMonth + "-01"));
+  const monthEnd = endOfMonth(monthStart);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const leadBlanks = getDay(monthStart);
+
+  const calQuery = useQuery({
+    queryKey: ["attendance-cal", calMonth, myEmployee?.id],
+    enabled: !!myEmployee?.id,
+    queryFn: async () => {
+      const from = format(monthStart, "yyyy-MM-dd");
+      const to = format(monthEnd, "yyyy-MM-dd");
+      return ((await supabase.from("attendance").select("date,status,hours_worked")
+        .eq("employee_id", myEmployee!.id).gte("date", from).lte("date", to)).data ?? []) as any[];
+    },
+  });
+  const calMap = useMemo(() => {
+    const m = new Map<string, any>();
+    (calQuery.data ?? []).forEach((r) => m.set(r.date, r));
+    return m;
+  }, [calQuery.data]);
+  const calTone = (s?: string) => {
+    if (!s) return "bg-muted/20 text-muted-foreground";
+    if (s === "present") return "bg-success/20 text-success border-success/40";
+    if (s === "late") return "bg-warning/20 text-warning border-warning/40";
+    if (s === "half_day") return "bg-warning/15 text-warning border-warning/30";
+    if (s === "work_from_home") return "bg-info/20 text-info border-info/40";
+    if (s === "absent") return "bg-destructive/20 text-destructive border-destructive/40";
+    if (s === "on_leave") return "bg-primary/15 text-primary border-primary/30";
+    return "bg-muted/20";
+  };
 
   return (
     <div className="space-y-6">
@@ -216,6 +247,40 @@ function AttendancePage() {
           </div>
         )}
       </div>
+
+      {myEmployee && (
+        <div className="glass-card rounded-2xl p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-semibold">My attendance calendar</h3>
+              <p className="text-xs text-muted-foreground">Daily attendance for {myEmployee.full_name}</p>
+            </div>
+            <Input type="month" value={calMonth} onChange={(e) => setCalMonth(e.target.value)} className="w-40" />
+          </div>
+          <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] text-muted-foreground">
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d} className="py-1 font-medium">{d}</div>)}
+            {Array.from({ length: leadBlanks }).map((_, i) => <div key={`b${i}`} />)}
+            {monthDays.map((d) => {
+              const key = format(d, "yyyy-MM-dd");
+              const rec = calMap.get(key);
+              const today = isSameDay(d, new Date());
+              return (
+                <div key={key} className={`aspect-square rounded-lg border p-1.5 text-left ${calTone(rec?.status)} ${today ? "ring-2 ring-primary/60" : "border-border/30"}`}>
+                  <div className="text-xs font-semibold">{format(d, "d")}</div>
+                  {rec && <div className="mt-0.5 truncate text-[9px] capitalize opacity-80">{rec.status.replace("_", " ")}</div>}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+            {[["present","Present"],["late","Late"],["half_day","Half day"],["work_from_home","WFH"],["absent","Absent"],["on_leave","Leave"]].map(([k, l]) => (
+              <div key={k} className="flex items-center gap-1.5">
+                <span className={`h-3 w-3 rounded ${calTone(k)}`} />{l}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
         <DialogContent>

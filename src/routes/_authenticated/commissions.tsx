@@ -34,11 +34,17 @@ function CommissionsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: rows, isLoading } = useQuery({
+  const { data: allRows, isLoading } = useQuery({
     queryKey: ["commissions"],
     queryFn: async () => ((await supabase.from("commissions").select("*").order("created_at", { ascending: false })).data ?? []) as any[],
   });
+  const rows = (allRows ?? []).filter((r: any) =>
+    (typeFilter === "all" || r.commission_type === typeFilter) &&
+    (statusFilter === "all" || r.payment_status === statusFilter)
+  );
 
   const upsertMut = useMutation({
     mutationFn: async (p: any) => {
@@ -59,8 +65,12 @@ function CommissionsPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["commissions"] }); toast.success("Marked as paid"); },
   });
 
-  const totalPending = (rows ?? []).filter((r: any) => r.payment_status === "pending").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
-  const totalPaid = (rows ?? []).filter((r: any) => r.payment_status === "paid").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+  const totalPending = (allRows ?? []).filter((r: any) => r.payment_status === "pending").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+  const totalPaid = (allRows ?? []).filter((r: any) => r.payment_status === "paid").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+  const byType = ["employee","freelancer","referral"].map((t) => ({
+    type: t,
+    total: (allRows ?? []).filter((r: any) => r.commission_type === t).reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0),
+  }));
 
   return (
     <div className="space-y-6">
@@ -73,22 +83,55 @@ function CommissionsPage() {
           </Button>
         )}
       />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Pending payout</div>
-          <div className="mt-1 text-3xl font-bold text-warning">₹{totalPending.toLocaleString("en-IN")}</div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <div className="glass-card rounded-2xl p-5 sm:col-span-1">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Pending</div>
+          <div className="mt-1 text-2xl font-bold text-warning">₹{totalPending.toLocaleString("en-IN")}</div>
         </div>
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Total paid</div>
-          <div className="mt-1 text-3xl font-bold text-success">₹{totalPaid.toLocaleString("en-IN")}</div>
+        <div className="glass-card rounded-2xl p-5 sm:col-span-1">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Paid</div>
+          <div className="mt-1 text-2xl font-bold text-success">₹{totalPaid.toLocaleString("en-IN")}</div>
+        </div>
+        {byType.map((b) => (
+          <div key={b.type} className="glass-card rounded-2xl p-5">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground capitalize">{b.type}</div>
+            <div className="mt-1 text-xl font-bold">₹{b.total.toLocaleString("en-IN")}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Type</Label>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="employee">Employee</SelectItem>
+              <SelectItem value="freelancer">Freelancer</SelectItem>
+              <SelectItem value="referral">Referral</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Status</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="glass-card overflow-hidden rounded-2xl">
         {isLoading ? (
           <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
-        ) : (rows ?? []).length === 0 ? (
-          <EmptyState icon={BadgeIndianRupee} title="No commissions yet" description="Record commissions to keep payout history." />
+        ) : rows.length === 0 ? (
+          <EmptyState icon={BadgeIndianRupee} title="No commissions" description="Adjust filters or record a new commission." />
         ) : (
           <div className="overflow-x-auto">
             <Table>

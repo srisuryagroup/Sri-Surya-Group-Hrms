@@ -22,7 +22,7 @@ import { ClipboardList, Plus, Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, differenceInCalendarDays } from "date-fns";
+import { format, differenceInCalendarDays, startOfMonth, endOfMonth, eachDayOfInterval, getDay, parseISO, isWithinInterval } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/leave")({
   head: () => ({ meta: [{ title: "Leave — Sri Surya Group HRMS" }] }),
@@ -86,6 +86,34 @@ function LeavePage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const [calMonth, setCalMonth] = useState(new Date().toISOString().slice(0, 7));
+  const monthStart = startOfMonth(new Date(calMonth + "-01"));
+  const monthEnd = endOfMonth(monthStart);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const leadBlanks = getDay(monthStart);
+
+  const ANNUAL_QUOTA: Record<string, number> = { casual: 12, sick: 10, earned: 15, maternity: 90, unpaid: 0, other: 0 };
+  const balance = useMemo(() => {
+    const year = new Date().getFullYear();
+    const used: Record<string, number> = {};
+    (rows ?? []).forEach((r: any) => {
+      if (r.status !== "approved") return;
+      if (myEmployee && r.employee_id !== myEmployee.id) return;
+      if (new Date(r.start_date).getFullYear() !== year) return;
+      used[r.leave_type] = (used[r.leave_type] ?? 0) + (r.days ?? 0);
+    });
+    return Object.keys(ANNUAL_QUOTA).filter((k) => ANNUAL_QUOTA[k] > 0).map((k) => ({
+      type: k, used: used[k] ?? 0, quota: ANNUAL_QUOTA[k],
+    }));
+  }, [rows, myEmployee]);
+
+  const calLeaves = useMemo(() => {
+    return (rows ?? []).filter((r: any) => r.status === "approved").map((r: any) => ({
+      ...r, s: parseISO(r.start_date), e: parseISO(r.end_date),
+    }));
+  }, [rows]);
+
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -108,6 +136,52 @@ function LeavePage() {
           </Button>
         }
       />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="glass-card rounded-2xl p-5 lg:col-span-1">
+          <h3 className="text-sm font-semibold">Leave balance ({new Date().getFullYear()})</h3>
+          <p className="text-xs text-muted-foreground">{myEmployee?.full_name ?? "Company-wide"}</p>
+          <div className="mt-4 space-y-3">
+            {balance.map((b) => {
+              const pct = Math.min(100, Math.round((b.used / b.quota) * 100));
+              return (
+                <div key={b.type}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="capitalize font-medium">{b.type}</span>
+                    <span className="text-muted-foreground">{b.used} / {b.quota} days</span>
+                  </div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted/30">
+                    <div className="h-full rounded-full bg-gradient-surya" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-5 lg:col-span-2">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Leave calendar</h3>
+            <Input type="month" value={calMonth} onChange={(e) => setCalMonth(e.target.value)} className="w-40" />
+          </div>
+          <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] text-muted-foreground">
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d} className="py-1 font-medium">{d}</div>)}
+            {Array.from({ length: leadBlanks }).map((_, i) => <div key={`b${i}`} />)}
+            {monthDays.map((d) => {
+              const onLeave = calLeaves.filter((l) => isWithinInterval(d, { start: l.s, end: l.e }));
+              return (
+                <div key={d.toISOString()} className={`aspect-square rounded-lg border p-1.5 text-left ${onLeave.length ? "bg-primary/15 border-primary/40 text-primary" : "border-border/30 bg-muted/10"}`}>
+                  <div className="text-xs font-semibold">{format(d, "d")}</div>
+                  {onLeave.length > 0 && (
+                    <div className="mt-0.5 truncate text-[9px] opacity-80">{onLeave.length === 1 ? (onLeave[0].employees?.full_name ?? "").split(" ")[0] : `${onLeave.length} out`}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
 
       <div className="flex items-end gap-3">
         <div className="space-y-1.5">

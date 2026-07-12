@@ -248,6 +248,40 @@ function AttendancePage() {
         )}
       </div>
 
+      {myEmployee && (
+        <div className="glass-card rounded-2xl p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-semibold">My attendance calendar</h3>
+              <p className="text-xs text-muted-foreground">Daily attendance for {myEmployee.full_name}</p>
+            </div>
+            <Input type="month" value={calMonth} onChange={(e) => setCalMonth(e.target.value)} className="w-40" />
+          </div>
+          <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] text-muted-foreground">
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d} className="py-1 font-medium">{d}</div>)}
+            {Array.from({ length: leadBlanks }).map((_, i) => <div key={`b${i}`} />)}
+            {monthDays.map((d) => {
+              const key = format(d, "yyyy-MM-dd");
+              const rec = calMap.get(key);
+              const today = isSameDay(d, new Date());
+              return (
+                <div key={key} className={`aspect-square rounded-lg border p-1.5 text-left ${calTone(rec?.status)} ${today ? "ring-2 ring-primary/60" : "border-border/30"}`}>
+                  <div className="text-xs font-semibold">{format(d, "d")}</div>
+                  {rec && <div className="mt-0.5 truncate text-[9px] capitalize opacity-80">{rec.status.replace("_", " ")}</div>}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+            {[["present","Present"],["late","Late"],["half_day","Half day"],["work_from_home","WFH"],["absent","Absent"],["on_leave","Leave"]].map(([k, l]) => (
+              <div key={k} className="flex items-center gap-1.5">
+                <span className={`h-3 w-3 rounded ${calTone(k)}`} />{l}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Attendance entry</DialogTitle></DialogHeader>

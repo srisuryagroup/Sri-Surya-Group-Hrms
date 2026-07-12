@@ -65,8 +65,12 @@ function CommissionsPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["commissions"] }); toast.success("Marked as paid"); },
   });
 
-  const totalPending = (rows ?? []).filter((r: any) => r.payment_status === "pending").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
-  const totalPaid = (rows ?? []).filter((r: any) => r.payment_status === "paid").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+  const totalPending = (allRows ?? []).filter((r: any) => r.payment_status === "pending").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+  const totalPaid = (allRows ?? []).filter((r: any) => r.payment_status === "paid").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+  const byType = ["employee","freelancer","referral"].map((t) => ({
+    type: t,
+    total: (allRows ?? []).filter((r: any) => r.commission_type === t).reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0),
+  }));
 
   return (
     <div className="space-y-6">

@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileDown, Users, Briefcase, Wallet, BadgeIndianRupee, FolderKanban, CalendarCheck } from "lucide-react";
+import { FileDown, Users, Briefcase, Wallet, BadgeIndianRupee, FolderKanban, CalendarCheck, FileSpreadsheet, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { exportToCsv } from "@/lib/csv";
+import { exportToCsv, exportToXlsx, exportToPdf } from "@/lib/export";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reports")({
@@ -34,6 +34,14 @@ async function fetchReport(key: string) {
   return map[key]();
 }
 
+function flatten(rows: any[]) {
+  return rows.map((r) => {
+    const o: any = {};
+    for (const k of Object.keys(r)) if (r[k] === null || typeof r[k] !== "object") o[k] = r[k];
+    return o;
+  });
+}
+
 function ReportsPage() {
   const counts = useQuery({
     queryKey: ["report-counts"],
@@ -44,17 +52,15 @@ function ReportsPage() {
     },
   });
 
-  const download = async (key: string) => {
+  const download = async (key: string, fmt: "csv" | "xlsx" | "pdf", title: string) => {
     try {
       const rows = await fetchReport(key);
       if (!rows.length) { toast.info("No data to export"); return; }
-      // strip nested objects
-      const flat = rows.map((r: any) => {
-        const o: any = {};
-        for (const k of Object.keys(r)) if (r[k] === null || typeof r[k] !== "object") o[k] = r[k];
-        return o;
-      });
-      exportToCsv(`${key}-report-${new Date().toISOString().slice(0, 10)}.csv`, flat);
+      const flat = flatten(rows);
+      const date = new Date().toISOString().slice(0, 10);
+      if (fmt === "csv") exportToCsv(`${key}-${date}.csv`, flat);
+      else if (fmt === "xlsx") exportToXlsx(`${key}-${date}.xlsx`, flat);
+      else exportToPdf(`${key}-${date}.pdf`, title, flat);
     } catch (e: any) {
       toast.error(e.message ?? "Failed to export");
     }
@@ -64,7 +70,7 @@ function ReportsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Reports"
-        description="Download CSV exports across every core module for quick reporting."
+        description="Download CSV, Excel and PDF exports across every core module."
       />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {REPORTS.map((r) => {
@@ -83,9 +89,17 @@ function ReportsPage() {
                 <p className="text-sm text-muted-foreground">{r.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-bold text-foreground">{counts.data?.[r.key] ?? "—"}</span>
-                  <Button size="sm" variant="outline" onClick={() => download(r.key)}>
-                    <FileDown className="mr-1.5 h-4 w-4" />Export CSV
-                  </Button>
+                  <div className="flex gap-1.5">
+                    <Button size="sm" variant="outline" onClick={() => download(r.key, "csv", r.title)} title="Export CSV">
+                      <FileDown className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => download(r.key, "xlsx", r.title)} title="Export Excel">
+                      <FileSpreadsheet className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => download(r.key, "pdf", r.title)} title="Export PDF">
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -86,6 +86,34 @@ function LeavePage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const [calMonth, setCalMonth] = useState(new Date().toISOString().slice(0, 7));
+  const monthStart = startOfMonth(new Date(calMonth + "-01"));
+  const monthEnd = endOfMonth(monthStart);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const leadBlanks = getDay(monthStart);
+
+  const ANNUAL_QUOTA: Record<string, number> = { casual: 12, sick: 10, earned: 15, maternity: 90, unpaid: 0, other: 0 };
+  const balance = useMemo(() => {
+    const year = new Date().getFullYear();
+    const used: Record<string, number> = {};
+    (rows ?? []).forEach((r: any) => {
+      if (r.status !== "approved") return;
+      if (myEmployee && r.employee_id !== myEmployee.id) return;
+      if (new Date(r.start_date).getFullYear() !== year) return;
+      used[r.leave_type] = (used[r.leave_type] ?? 0) + (r.days ?? 0);
+    });
+    return Object.keys(ANNUAL_QUOTA).filter((k) => ANNUAL_QUOTA[k] > 0).map((k) => ({
+      type: k, used: used[k] ?? 0, quota: ANNUAL_QUOTA[k],
+    }));
+  }, [rows, myEmployee]);
+
+  const calLeaves = useMemo(() => {
+    return (rows ?? []).filter((r: any) => r.status === "approved").map((r: any) => ({
+      ...r, s: parseISO(r.start_date), e: parseISO(r.end_date),
+    }));
+  }, [rows]);
+
+
   return (
     <div className="space-y-6">
       <PageHeader

@@ -127,6 +127,36 @@ function AttendancePage() {
       wfh: r.filter((x) => x.status === "work_from_home").length,
     };
   }, [rows]);
+  const monthStart = startOfMonth(new Date(calMonth + "-01"));
+  const monthEnd = endOfMonth(monthStart);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const leadBlanks = getDay(monthStart);
+
+  const calQuery = useQuery({
+    queryKey: ["attendance-cal", calMonth, myEmployee?.id],
+    enabled: !!myEmployee?.id,
+    queryFn: async () => {
+      const from = format(monthStart, "yyyy-MM-dd");
+      const to = format(monthEnd, "yyyy-MM-dd");
+      return ((await supabase.from("attendance").select("date,status,hours_worked")
+        .eq("employee_id", myEmployee!.id).gte("date", from).lte("date", to)).data ?? []) as any[];
+    },
+  });
+  const calMap = useMemo(() => {
+    const m = new Map<string, any>();
+    (calQuery.data ?? []).forEach((r) => m.set(r.date, r));
+    return m;
+  }, [calQuery.data]);
+  const calTone = (s?: string) => {
+    if (!s) return "bg-muted/20 text-muted-foreground";
+    if (s === "present") return "bg-success/20 text-success border-success/40";
+    if (s === "late") return "bg-warning/20 text-warning border-warning/40";
+    if (s === "half_day") return "bg-warning/15 text-warning border-warning/30";
+    if (s === "work_from_home") return "bg-info/20 text-info border-info/40";
+    if (s === "absent") return "bg-destructive/20 text-destructive border-destructive/40";
+    if (s === "on_leave") return "bg-primary/15 text-primary border-primary/30";
+    return "bg-muted/20";
+  };
 
   return (
     <div className="space-y-6">

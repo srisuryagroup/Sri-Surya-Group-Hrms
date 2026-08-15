@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/auth/callback")({
+export const Route = createFileRoute("/auth-callback")({
   ssr: false,
   head: () => ({
     meta: [

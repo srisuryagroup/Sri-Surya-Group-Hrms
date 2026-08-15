@@ -173,7 +173,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
       email: emailR.data,
       password: passR.data,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth-callback`,
         data: { full_name: nameR.data },
       },
     });

@@ -19,6 +19,13 @@ export const Route = createFileRoute("/auth")({
         name: "description",
         content: "Sign in or create your Sri Surya Group HRMS account.",
       },
+      { property: "og:title", content: "Sign in — Sri Surya Group HRMS" },
+      {
+        property: "og:description",
+        content: "Sign in or create your Sri Surya Group HRMS account.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -162,11 +169,11 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     if (!emailR.success) return toast.error(emailR.error.issues[0].message);
     if (!passR.success) return toast.error(passR.error.issues[0].message);
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: emailR.data,
       password: passR.data,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth-callback`,
         data: { full_name: nameR.data },
       },
     });
@@ -175,7 +182,12 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created! You can sign in now.");
+    if (data.session) {
+      toast.success("Account created successfully.");
+      window.location.assign("/dashboard");
+      return;
+    }
+    toast.success("Account created! Check your email to confirm your account.");
     onSuccess();
   }
 

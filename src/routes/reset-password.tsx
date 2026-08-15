@@ -12,7 +12,15 @@ import { Loader2 } from "lucide-react";
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
-    meta: [{ title: "Reset password — Sri Surya Group HRMS" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Reset password — Sri Surya Group HRMS" },
+      { name: "description", content: "Securely reset your Sri Surya Group HRMS password." },
+      { property: "og:title", content: "Reset password — Sri Surya Group HRMS" },
+      { property: "og:description", content: "Securely reset your Sri Surya Group HRMS password." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: ResetPassword,
 });

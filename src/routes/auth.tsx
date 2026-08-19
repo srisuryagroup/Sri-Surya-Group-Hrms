@@ -12,6 +12,15 @@ import { Loader2, ArrowLeft, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { mode?: "signin" | "signup" | "forgot" } => {
+    const mode = search.mode;
+    if (mode === "signup" || mode === "forgot" || mode === "signin") {
+      return { mode };
+    }
+    return {};
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Sri Surya Group HRMS" },
@@ -36,7 +45,8 @@ const passwordSchema = z.string().min(6, "Password must be at least 6 characters
 const nameSchema = z.string().trim().min(2, "Name is required").max(80);
 
 function AuthPage() {
-  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const { mode: initialMode } = Route.useSearch();
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(initialMode ?? "signin");
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">

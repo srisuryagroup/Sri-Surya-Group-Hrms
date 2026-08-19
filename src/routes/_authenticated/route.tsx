@@ -145,11 +145,15 @@ function AuthenticatedLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
         <header className="glass-panel sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border/40 px-4 sm:px-6">
-          <SheetTrigger asChild onClick={() => setMobileOpen(true)}>
-            <Button variant="ghost" size="icon" className="lg:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            aria-label="Open navigation menu"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           <div className="relative hidden max-w-md flex-1 md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input

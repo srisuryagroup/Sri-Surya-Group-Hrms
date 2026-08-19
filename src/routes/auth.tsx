@@ -12,6 +12,15 @@ import { Loader2, ArrowLeft, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => {
+    const mode = search.mode;
+    return {
+      mode:
+        mode === "signup" || mode === "forgot" || mode === "signin"
+          ? (mode as "signin" | "signup" | "forgot")
+          : ("signin" as const),
+    };
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Sri Surya Group HRMS" },

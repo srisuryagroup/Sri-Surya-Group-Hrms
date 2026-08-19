@@ -12,14 +12,14 @@ import { Loader2, ArrowLeft, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { mode?: "signin" | "signup" | "forgot" } => {
     const mode = search.mode;
-    return {
-      mode:
-        mode === "signup" || mode === "forgot" || mode === "signin"
-          ? (mode as "signin" | "signup" | "forgot")
-          : undefined,
-    };
+    if (mode === "signup" || mode === "forgot" || mode === "signin") {
+      return { mode };
+    }
+    return {};
   },
   head: () => ({
     meta: [

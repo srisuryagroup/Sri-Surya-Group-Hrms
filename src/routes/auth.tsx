@@ -18,7 +18,7 @@ export const Route = createFileRoute("/auth")({
       mode:
         mode === "signup" || mode === "forgot" || mode === "signin"
           ? (mode as "signin" | "signup" | "forgot")
-          : ("signin" as const),
+          : undefined,
     };
   },
   head: () => ({

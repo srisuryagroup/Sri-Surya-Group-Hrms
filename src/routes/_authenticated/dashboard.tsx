@@ -35,6 +35,34 @@ import {
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type DepartmentRow = {
+  id: string;
+  departments: { name: string | null } | { name: string | null }[] | null;
+};
+
+type ProjectStatusRow = {
+  status: string | null;
+};
+
+type RecentActivity = {
+  id: string;
+  title: string;
+  message: string | null;
+  category: string | null;
+  created_at: string | null;
+};
+
+function getDepartmentName(departments: DepartmentRow["departments"]): string {
+  const department = Array.isArray(departments) ? departments[0] : departments;
+  return department?.name?.trim() || "Unassigned";
+}
+
+function formatActivityDate(value: string | null): string {
+  if (!value) return "Date unavailable";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : format(date, "MMM d, h:mm a");
+}
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [{ title: "Dashboard — Sri Surya Group HRMS" }],
@@ -87,16 +115,19 @@ function Dashboard() {
         .map(([month, count]) => ({ month: month.slice(2), employees: count }));
 
       const deptMap = new Map<string, number>();
-      (deptCounts.data ?? []).forEach((row: any) => {
-        const name = row.departments?.name ?? "Unassigned";
+      ((deptCounts.data ?? []) as DepartmentRow[]).forEach((row) => {
+        const name = getDepartmentName(row.departments);
         deptMap.set(name, (deptMap.get(name) ?? 0) + 1);
       });
       const deptData = Array.from(deptMap.entries()).map(([name, value]) => ({ name, value }));
 
       const psMap = new Map<string, number>();
-      (projByStatus.data ?? []).forEach((r: any) => psMap.set(r.status, (psMap.get(r.status) ?? 0) + 1));
+      ((projByStatus.data ?? []) as ProjectStatusRow[]).forEach((row) => {
+        const status = row.status?.trim() || "unknown";
+        psMap.set(status, (psMap.get(status) ?? 0) + 1);
+      });
       const projData = Array.from(psMap.entries()).map(([status, count]) => ({
-        status: status.replace("_", " "),
+        status: status.replaceAll("_", " "),
         count,
       }));
 
@@ -111,7 +142,7 @@ function Dashboard() {
         growth: growthArr,
         deptData,
         projData,
-        recent: recent.data ?? [],
+        recent: (recent.data ?? []) as RecentActivity[],
       };
     },
   });
@@ -224,7 +255,7 @@ function Dashboard() {
             {(data?.recent ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">No recent activity.</p>
             ) : (
-              (data?.recent ?? []).map((n: any) => (
+              (data?.recent ?? []).map((n) => (
                 <div key={n.id} className="flex items-start gap-3 rounded-lg border border-border/40 bg-card/30 p-3">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                   <div className="min-w-0 flex-1">
@@ -234,7 +265,7 @@ function Dashboard() {
                     </div>
                     {n.message && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.message}</p>}
                     <p className="mt-1 text-[10px] text-muted-foreground">
-                      {format(new Date(n.created_at), "MMM d, h:mm a")}
+                      {formatActivityDate(n.created_at)}
                     </p>
                   </div>
                 </div>

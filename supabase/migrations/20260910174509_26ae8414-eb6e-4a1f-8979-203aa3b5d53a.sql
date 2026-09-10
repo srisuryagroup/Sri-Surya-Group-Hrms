@@ -1,0 +1,14 @@
+REVOKE ALL ON FUNCTION public.user_id_for_email(text) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.calc_commission_amount() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_project_assignment() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_task_assignment() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_leave_decision() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_commission_paid() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_payroll_generated() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.my_freelancer_id() FROM anon;
+REVOKE ALL ON FUNCTION public.my_employee_id() FROM anon;
+REVOKE ALL ON FUNCTION public.current_user_email() FROM anon;
+REVOKE ALL ON FUNCTION public.can_manage(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.has_role(uuid, public.app_role) FROM anon;
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_updated_at_column() FROM anon, authenticated;

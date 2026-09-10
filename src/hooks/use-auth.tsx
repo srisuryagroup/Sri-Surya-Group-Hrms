@@ -1,21 +1,19 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-
-type Role =
-  | "super_admin"
-  | "hr_manager"
-  | "manager"
-  | "employee"
-  | "freelancer";
+import { primaryRole as pickPrimaryRole, type Role } from "@/lib/rbac";
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   roles: Role[];
+  role: Role;
+  rolesReady: boolean;
   loading: boolean;
   isManager: boolean;
   isAdmin: boolean;
+  isEmployee: boolean;
+  isFreelancer: boolean;
   signOut: () => Promise<void>;
   refreshRoles: () => Promise<void>;
 }

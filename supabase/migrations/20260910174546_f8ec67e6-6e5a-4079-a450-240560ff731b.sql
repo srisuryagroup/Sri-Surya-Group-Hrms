@@ -1,0 +1,20 @@
+REVOKE ALL ON FUNCTION public.user_id_for_email(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.calc_commission_amount() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.notify_project_assignment() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.notify_task_assignment() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.notify_leave_decision() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.notify_commission_paid() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.notify_payroll_generated() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.update_updated_at_column() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.my_freelancer_id() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.my_employee_id() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.current_user_email() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_manage(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.has_role(uuid, public.app_role) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION public.my_freelancer_id() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.my_employee_id() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.current_user_email() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.can_manage(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated;

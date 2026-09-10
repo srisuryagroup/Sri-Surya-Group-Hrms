@@ -102,6 +102,7 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["payment_status"]
           percentage: number | null
           project_id: string | null
+          project_value: number | null
           recipient_id: string | null
           recipient_name: string
           remarks: string | null
@@ -117,6 +118,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["payment_status"]
           percentage?: number | null
           project_id?: string | null
+          project_value?: number | null
           recipient_id?: string | null
           recipient_name: string
           remarks?: string | null
@@ -132,6 +134,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["payment_status"]
           percentage?: number | null
           project_id?: string | null
+          project_value?: number | null
           recipient_id?: string | null
           recipient_name?: string
           remarks?: string | null
@@ -852,6 +855,83 @@ export type Database = {
         }
         Relationships: []
       }
+      work_updates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          details: string | null
+          employee_id: string | null
+          freelancer_id: string | null
+          hours_spent: number | null
+          id: string
+          project_id: string | null
+          status: string
+          task_id: string | null
+          title: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          employee_id?: string | null
+          freelancer_id?: string | null
+          hours_spent?: number | null
+          id?: string
+          project_id?: string | null
+          status?: string
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          work_date?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          employee_id?: string | null
+          freelancer_id?: string | null
+          hours_spent?: number | null
+          id?: string
+          project_id?: string | null
+          status?: string
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_updates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_updates_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "freelancers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_updates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_updates_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -866,6 +946,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      my_employee_id: { Args: never; Returns: string }
+      my_freelancer_id: { Args: never; Returns: string }
+      user_id_for_email: { Args: { _email: string }; Returns: string }
     }
     Enums: {
       app_role:

@@ -181,9 +181,10 @@ function AuthenticatedLayout() {
 
 function SidebarNav() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { role } = useAuth();
   return (
     <>
-      {nav.map((item) => {
+      {navForRole(role).map((item) => {
         const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
         const Icon = item.icon;
         return (

@@ -190,7 +190,7 @@ function SidebarNav() {
         return (
           <Link
             key={item.to}
-            to={item.to}
+            to={item.to as "/dashboard"}
             className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
               active
                 ? "bg-gradient-surya text-primary-foreground surya-glow"

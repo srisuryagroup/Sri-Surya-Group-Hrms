@@ -7,26 +7,15 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  LayoutDashboard,
-  Users,
-  Briefcase,
-  Building2,
-  FolderKanban,
-  CheckSquare,
-  BadgeIndianRupee,
-  FileText,
   Bell,
   Settings,
   Menu,
   Search,
   LogOut,
   Loader2,
-  CalendarCheck,
-  ClipboardList,
-  Wallet,
-  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { navForRole, canAccessPath, ROLE_LABEL } from "@/lib/rbac";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

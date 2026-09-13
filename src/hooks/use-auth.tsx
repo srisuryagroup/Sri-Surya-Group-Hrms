@@ -36,10 +36,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [rolesReady, setRolesReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
+
+    const loadRoles = (userId: string) => {
+      fetchRoles(userId).then((r) => {
+        if (!mounted) return;
+        setRoles(r);
+        setRolesReady(true);
+      });
+    };
 
     // Set up listener first
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
@@ -47,13 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        const uid = s.user.id;
         // Defer to avoid deadlock inside the callback
         setTimeout(() => {
           if (!mounted) return;
-          fetchRoles(s.user.id).then((r) => mounted && setRoles(r));
+          loadRoles(uid);
         }, 0);
       } else {
         setRoles([]);
+        setRolesReady(true);
       }
     });
 
@@ -63,7 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       if (data.session?.user) {
-        fetchRoles(data.session.user.id).then((r) => mounted && setRoles(r));
+        loadRoles(data.session.user.id);
+      } else {
+        setRolesReady(true);
       }
       setLoading(false);
     });
@@ -77,18 +90,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshRoles = async () => {
     if (!user) return;
     setRoles(await fetchRoles(user.id));
+    setRolesReady(true);
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setRoles([]);
+    setRolesReady(true);
   };
 
-  const isManager = roles.some((r) => r === "super_admin" || r === "hr_manager");
+  const role = pickPrimaryRole(roles);
+  const isManager = roles.some(
+    (r) => r === "super_admin" || r === "hr_manager" || r === "manager",
+  );
   const isAdmin = roles.includes("super_admin");
+  const isFreelancer = role === "freelancer";
+  const isEmployee = role === "employee";
 
   return (
     <AuthContext.Provider
-      value={{ user, session, roles, loading, isManager, isAdmin, signOut, refreshRoles }}
+      value={{
+        user,
+        session,
+        roles,
+        role,
+        rolesReady,
+        loading,
+        isManager,
+        isAdmin,
+        isEmployee,
+        isFreelancer,
+        signOut,
+        refreshRoles,
+      }}
     >
       {children}
     </AuthContext.Provider>

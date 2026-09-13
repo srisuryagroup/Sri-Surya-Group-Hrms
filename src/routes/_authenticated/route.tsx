@@ -38,26 +38,10 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
-const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/employees", label: "Employees", icon: Users },
-  { to: "/freelancers", label: "Freelancers", icon: Briefcase },
-  { to: "/departments", label: "Departments", icon: Building2 },
-  { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/tasks", label: "Tasks", icon: CheckSquare },
-  { to: "/attendance", label: "Attendance", icon: CalendarCheck },
-  { to: "/leave", label: "Leave", icon: ClipboardList },
-  { to: "/payroll", label: "Payroll", icon: Wallet },
-  { to: "/commissions", label: "Commissions", icon: BadgeIndianRupee },
-  { to: "/documents", label: "Documents", icon: FileText },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
-  { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/settings", label: "Settings", icon: Settings },
-] as const;
-
 function AuthenticatedLayout() {
-  const { user, loading, roles, signOut } = useAuth();
+  const { user, loading, role, rolesReady, signOut } = useAuth();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -66,7 +50,15 @@ function AuthenticatedLayout() {
     }
   }, [loading, user, navigate]);
 
-  if (loading || !user) {
+  // Block unauthorized module access for the current role.
+  useEffect(() => {
+    if (loading || !user || !rolesReady) return;
+    if (!canAccessPath(role, pathname)) {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [loading, user, rolesReady, role, pathname, navigate]);
+
+  if (loading || !user || !rolesReady) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />

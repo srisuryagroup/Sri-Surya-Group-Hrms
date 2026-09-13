@@ -66,16 +66,7 @@ function AuthenticatedLayout() {
     );
   }
 
-  const roleLabel =
-    roles.includes("super_admin")
-      ? "Super Admin"
-      : roles.includes("hr_manager")
-        ? "HR Manager"
-        : roles.includes("manager")
-          ? "Manager"
-          : roles.includes("freelancer")
-            ? "Freelancer"
-            : "Employee";
+  const roleLabel = ROLE_LABEL[role];
 
   const initials =
     (user.user_metadata?.full_name || user.email || "U")

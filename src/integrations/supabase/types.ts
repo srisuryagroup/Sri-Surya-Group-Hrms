@@ -364,6 +364,7 @@ export type Database = {
             | Database["public"]["Enums"]["availability_status"]
             | null
           bank_name: string | null
+          commission_percentage: number
           created_at: string
           email: string
           experience_years: number | null
@@ -387,6 +388,7 @@ export type Database = {
             | Database["public"]["Enums"]["availability_status"]
             | null
           bank_name?: string | null
+          commission_percentage?: number
           created_at?: string
           email: string
           experience_years?: number | null
@@ -410,6 +412,7 @@ export type Database = {
             | Database["public"]["Enums"]["availability_status"]
             | null
           bank_name?: string | null
+          commission_percentage?: number
           created_at?: string
           email?: string
           experience_years?: number | null

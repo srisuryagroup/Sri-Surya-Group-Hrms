@@ -23,9 +23,12 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as AuthenticatedPayrollRouteImport } from './routes/_authenticated/payroll'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedMyWorkRouteImport } from './routes/_authenticated/my-work'
+import { Route as AuthenticatedMyProfileRouteImport } from './routes/_authenticated/my-profile'
 import { Route as AuthenticatedLeaveRouteImport } from './routes/_authenticated/leave'
 import { Route as AuthenticatedFreelancersRouteImport } from './routes/_authenticated/freelancers'
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
+import { Route as AuthenticatedEarningsRouteImport } from './routes/_authenticated/earnings'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -102,6 +105,16 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMyWorkRoute = AuthenticatedMyWorkRouteImport.update({
+  id: '/my-work',
+  path: '/my-work',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMyProfileRoute = AuthenticatedMyProfileRouteImport.update({
+  id: '/my-profile',
+  path: '/my-profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedLeaveRoute = AuthenticatedLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -116,6 +129,11 @@ const AuthenticatedFreelancersRoute =
 const AuthenticatedEmployeesRoute = AuthenticatedEmployeesRouteImport.update({
   id: '/employees',
   path: '/employees',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEarningsRoute = AuthenticatedEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
@@ -159,9 +177,12 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/earnings': typeof AuthenticatedEarningsRoute
   '/employees': typeof AuthenticatedEmployeesRoute
   '/freelancers': typeof AuthenticatedFreelancersRoute
   '/leave': typeof AuthenticatedLeaveRoute
+  '/my-profile': typeof AuthenticatedMyProfileRoute
+  '/my-work': typeof AuthenticatedMyWorkRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/payroll': typeof AuthenticatedPayrollRoute
   '/projects': typeof AuthenticatedProjectsRoute
@@ -182,9 +203,12 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/earnings': typeof AuthenticatedEarningsRoute
   '/employees': typeof AuthenticatedEmployeesRoute
   '/freelancers': typeof AuthenticatedFreelancersRoute
   '/leave': typeof AuthenticatedLeaveRoute
+  '/my-profile': typeof AuthenticatedMyProfileRoute
+  '/my-work': typeof AuthenticatedMyWorkRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/payroll': typeof AuthenticatedPayrollRoute
   '/projects': typeof AuthenticatedProjectsRoute
@@ -207,9 +231,12 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/earnings': typeof AuthenticatedEarningsRoute
   '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
   '/_authenticated/freelancers': typeof AuthenticatedFreelancersRoute
   '/_authenticated/leave': typeof AuthenticatedLeaveRoute
+  '/_authenticated/my-profile': typeof AuthenticatedMyProfileRoute
+  '/_authenticated/my-work': typeof AuthenticatedMyWorkRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/payroll': typeof AuthenticatedPayrollRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
@@ -232,9 +259,12 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/departments'
     | '/documents'
+    | '/earnings'
     | '/employees'
     | '/freelancers'
     | '/leave'
+    | '/my-profile'
+    | '/my-work'
     | '/notifications'
     | '/payroll'
     | '/projects'
@@ -255,9 +285,12 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/departments'
     | '/documents'
+    | '/earnings'
     | '/employees'
     | '/freelancers'
     | '/leave'
+    | '/my-profile'
+    | '/my-work'
     | '/notifications'
     | '/payroll'
     | '/projects'
@@ -279,9 +312,12 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/departments'
     | '/_authenticated/documents'
+    | '/_authenticated/earnings'
     | '/_authenticated/employees'
     | '/_authenticated/freelancers'
     | '/_authenticated/leave'
+    | '/_authenticated/my-profile'
+    | '/_authenticated/my-work'
     | '/_authenticated/notifications'
     | '/_authenticated/payroll'
     | '/_authenticated/projects'
@@ -401,6 +437,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-work': {
+      id: '/_authenticated/my-work'
+      path: '/my-work'
+      fullPath: '/my-work'
+      preLoaderRoute: typeof AuthenticatedMyWorkRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-profile': {
+      id: '/_authenticated/my-profile'
+      path: '/my-profile'
+      fullPath: '/my-profile'
+      preLoaderRoute: typeof AuthenticatedMyProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leave': {
       id: '/_authenticated/leave'
       path: '/leave'
@@ -420,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/employees'
       fullPath: '/employees'
       preLoaderRoute: typeof AuthenticatedEmployeesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/earnings': {
+      id: '/_authenticated/earnings'
+      path: '/earnings'
+      fullPath: '/earnings'
+      preLoaderRoute: typeof AuthenticatedEarningsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/documents': {
@@ -466,9 +523,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedEarningsRoute: typeof AuthenticatedEarningsRoute
   AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
   AuthenticatedFreelancersRoute: typeof AuthenticatedFreelancersRoute
   AuthenticatedLeaveRoute: typeof AuthenticatedLeaveRoute
+  AuthenticatedMyProfileRoute: typeof AuthenticatedMyProfileRoute
+  AuthenticatedMyWorkRoute: typeof AuthenticatedMyWorkRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPayrollRoute: typeof AuthenticatedPayrollRoute
   AuthenticatedProjectsRoute: typeof AuthenticatedProjectsRoute
@@ -483,9 +543,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedEarningsRoute: AuthenticatedEarningsRoute,
   AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
   AuthenticatedFreelancersRoute: AuthenticatedFreelancersRoute,
   AuthenticatedLeaveRoute: AuthenticatedLeaveRoute,
+  AuthenticatedMyProfileRoute: AuthenticatedMyProfileRoute,
+  AuthenticatedMyWorkRoute: AuthenticatedMyWorkRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPayrollRoute: AuthenticatedPayrollRoute,
   AuthenticatedProjectsRoute: AuthenticatedProjectsRoute,

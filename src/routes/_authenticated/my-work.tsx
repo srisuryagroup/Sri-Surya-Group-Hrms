@@ -114,7 +114,8 @@ function MyWorkPage() {
         hours_spent: form.hours_spent ? Number(form.hours_spent) : null,
         work_date: form.work_date,
         project_id: form.project_id === "none" ? null : form.project_id,
-        [ownerFilter.column]: ownerFilter.id,
+        freelancer_id: ownerFilter.column === "freelancer_id" ? ownerFilter.id : null,
+        employee_id: ownerFilter.column === "employee_id" ? ownerFilter.id : null,
       });
       if (error) throw error;
     },

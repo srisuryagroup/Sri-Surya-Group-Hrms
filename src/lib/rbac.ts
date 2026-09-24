@@ -64,7 +64,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/departments", label: "Departments", icon: Building2, roles: MGMT },
   { to: "/projects", label: "Projects", icon: FolderKanban, roles: ALL },
   { to: "/tasks", label: "Tasks", icon: CheckSquare, roles: ALL },
-  { to: "/my-work", label: "My Work", icon: Send, roles: ["freelancer"] },
+  { to: "/my-work", label: "My Work", icon: Send, roles: ["employee", "freelancer"] },
   { to: "/earnings", label: "Earnings", icon: BadgeIndianRupee, roles: ["freelancer"] },
   {
     to: "/attendance",

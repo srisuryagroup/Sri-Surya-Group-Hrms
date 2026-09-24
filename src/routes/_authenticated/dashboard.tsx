@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
+import { EmployeeDashboard } from "@/components/dashboards/employee-dashboard";
+import { FreelancerDashboard } from "@/components/dashboards/freelancer-dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
@@ -73,6 +76,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 const CHART_COLORS = ["hsl(var(--chart-1))"];
 
 function Dashboard() {
+  const { role } = useAuth();
+  if (role === "employee") return <EmployeeDashboard />;
+  if (role === "freelancer") return <FreelancerDashboard />;
+  return <AdminDashboard isHR={role === "hr_manager"} />;
+}
+
+function AdminDashboard({ isHR }: { isHR: boolean }) {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
@@ -163,8 +173,8 @@ function Dashboard() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Dashboard"
-        description="Overview of your workforce, projects and operations."
+        title={isHR ? "HR Dashboard" : "Admin Dashboard"}
+        description={isHR ? "People, attendance, leave and payroll at a glance." : "Overview of your workforce, projects and operations."}
         actions={
           <>
             <Button asChild variant="outline"><Link to="/employees">Add Employee</Link></Button>

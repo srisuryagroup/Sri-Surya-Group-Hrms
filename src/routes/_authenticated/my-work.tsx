@@ -116,6 +116,7 @@ function MyWorkPage() {
         project_id: form.project_id === "none" ? null : form.project_id,
         freelancer_id: ownerFilter.column === "freelancer_id" ? ownerFilter.id : null,
         employee_id: ownerFilter.column === "employee_id" ? ownerFilter.id : null,
+        created_by: (await supabase.auth.getUser()).data.user?.id ?? null,
       });
       if (error) throw error;
     },

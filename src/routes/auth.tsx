@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/logo";
-import { Loader2, ArrowLeft, Sparkles } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -56,10 +56,6 @@ function AuthPage() {
         <div className="glass-card hidden flex-col justify-between rounded-3xl p-10 lg:flex">
           <Logo size="lg" />
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Sri Surya Group HRMS — v1
-            </div>
             <h1 className="text-5xl font-bold leading-[1.05] tracking-tight">
               Manage your{" "}
               <span className="text-gradient-surya">entire workforce</span>
@@ -70,18 +66,6 @@ function AuthPage() {
               Employees, freelancers, projects, tasks, commissions & business operations —
               beautifully organized, securely managed.
             </p>
-            <div className="grid grid-cols-3 gap-4 pt-4">
-              {[
-                { k: "15+", v: "Employees" },
-                { k: "7+", v: "Freelancers" },
-                { k: "7+", v: "Projects" },
-              ].map((s) => (
-                <div key={s.v} className="rounded-2xl border border-border/50 bg-card/30 p-4 backdrop-blur">
-                  <div className="text-2xl font-bold text-gradient-surya">{s.k}</div>
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.v}</div>
-                </div>
-              ))}
-            </div>
           </div>
           <p className="text-xs text-muted-foreground">© 2026 Sri Surya Group. All Rights Reserved.</p>
         </div>
@@ -211,7 +195,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-name">Full name</Label>
-        <Input id="signup-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ravi Kumar" required />
+        <Input id="signup-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" required />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-email">Work email</Label>

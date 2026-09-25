@@ -145,8 +145,8 @@ export function EmployeeDashboard() {
               tone="info"
             />
             <StatCard
-              label="Payslips"
-              value={data?.payslips.length ?? 0}
+              label="Latest Net Salary"
+              value={`₹${Number(data?.payslips?.[0]?.net_salary ?? me?.salary ?? 0).toLocaleString("en-IN")}`}
               icon={Wallet}
               tone="primary"
             />

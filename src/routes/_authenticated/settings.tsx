@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Building2 } from "lucide-react";
+import { Loader2, Building2, UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { createHrManager } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — Sri Surya Group HRMS" }] }),
@@ -75,7 +77,37 @@ function SettingsPage() {
           )}
         </CardContent>
       </Card>
+      {isAdmin && <CreateHrManagerCard />}
     </div>
+  );
+}
+
+function CreateHrManagerCard() {
+  const create = useServerFn(createHrManager);
+  const [f, setF] = useState({ full_name: "", email: "", password: "" });
+  const mut = useMutation({
+    mutationFn: () => create({ data: f }),
+    onSuccess: () => { toast.success("HR Manager account created"); setF({ full_name: "", email: "", password: "" }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+  return (
+    <Card className="glass-card border-border/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base"><UserPlus className="h-4 w-4" />Create HR Manager account</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <F label="Full name" required><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} required /></F>
+          <F label="Email" required><Input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} required /></F>
+          <F label="Temporary password" required full><Input type="password" minLength={8} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} placeholder="Minimum 8 characters" required /></F>
+          <div className="sm:col-span-2">
+            <Button type="submit" disabled={mut.isPending} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
+              {mut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Create HR Manager
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 

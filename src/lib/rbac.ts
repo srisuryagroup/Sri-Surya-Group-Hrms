@@ -15,6 +15,7 @@ import {
   BarChart3,
   UserCircle,
   Send,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -64,6 +65,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/departments", label: "Departments", icon: Building2, roles: MGMT },
   { to: "/projects", label: "Projects", icon: FolderKanban, roles: ALL },
   { to: "/tasks", label: "Tasks", icon: CheckSquare, roles: ALL },
+  { to: "/meetings", label: "Meetings", icon: Video, roles: ALL },
   { to: "/my-work", label: "My Work", icon: Send, roles: ["employee", "freelancer"] },
   { to: "/earnings", label: "Earnings", icon: BadgeIndianRupee, roles: ["freelancer"] },
   {

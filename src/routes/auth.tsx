@@ -152,6 +152,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accountType, setAccountType] = useState<"employee" | "freelancer">("employee");
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
@@ -168,7 +169,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
       password: passR.data,
       options: {
         emailRedirectTo: `${window.location.origin}/auth-callback`,
-        data: { full_name: nameR.data },
+        data: { full_name: nameR.data, account_type: accountType },
       },
     });
     setLoading(false);
@@ -192,6 +193,24 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         <p className="mt-1 text-sm text-muted-foreground">
           The first account created becomes the Super Admin.
         </p>
+      </div>
+      <div className="space-y-2">
+        <Label>Account type</Label>
+        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Account type">
+          {(["employee", "freelancer"] as const).map((t) => (
+            <Button
+              key={t}
+              type="button"
+              role="radio"
+              aria-checked={accountType === t}
+              variant={accountType === t ? "default" : "outline"}
+              onClick={() => setAccountType(t)}
+              className={accountType === t ? "bg-gradient-surya text-primary-foreground" : ""}
+            >
+              {t === "employee" ? "Employee" : "Freelancer"}
+            </Button>
+          ))}
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-name">Full name</Label>

@@ -8,6 +8,13 @@
       "when": 1789336873083,
       "tag": "0000_freelancer_commission_percentage",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791000877009,
+      "tag": "0001_signup_account_type",
+      "breakpoints": true
     }
   ]
 }

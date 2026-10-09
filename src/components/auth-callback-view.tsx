@@ -1,32 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/integrations/supabase/client";
-
-export const Route = createFileRoute("/auth-callback")({
-  ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Confirming account — Sri Surya Group HRMS" },
-      {
-        name: "description",
-        content: "Securely confirming your Sri Surya Group HRMS account.",
-      },
-      { property: "og:title", content: "Confirming account — Sri Surya Group HRMS" },
-      {
-        property: "og:description",
-        content: "Securely confirming your Sri Surya Group HRMS account.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
-  component: AuthCallback,
-});
 
 export function AuthCallback() {
   const navigate = useNavigate();

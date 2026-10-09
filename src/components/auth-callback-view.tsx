@@ -1,31 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/integrations/supabase/client";
-
-export const Route = createFileRoute("/auth-callback")({
-  ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Confirming account — Sri Surya Group HRMS" },
-      {
-        name: "description",
-        content: "Securely confirming your Sri Surya Group HRMS account.",
-      },
-      { property: "og:title", content: "Confirming account — Sri Surya Group HRMS" },
-      {
-        property: "og:description",
-        content: "Securely confirming your Sri Surya Group HRMS account.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
-  component: AuthCallback,
-});
 
 export function AuthCallback() {
   const navigate = useNavigate();
@@ -84,7 +63,10 @@ export function AuthCallback() {
         return;
       }
 
-      await navigate({ to: "/dashboard", replace: true });
+      // Verification complete: send the user to the HRMS sign-in page.
+      await supabase.auth.signOut();
+      toast.success("Email verified. Please sign in.");
+      await navigate({ to: "/auth", search: { mode: "signin" }, replace: true });
     }
 
     void completeVerification();
@@ -108,7 +90,7 @@ export function AuthCallback() {
           <div className="mt-8 space-y-3">
             <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
             <h1 className="text-xl font-semibold">Confirming your account</h1>
-            <p className="text-sm text-muted-foreground">You’ll be redirected to your dashboard.</p>
+            <p className="text-sm text-muted-foreground">You’ll be taken to the sign-in page.</p>
           </div>
         )}
       </div>

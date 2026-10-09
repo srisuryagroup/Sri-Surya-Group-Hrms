@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,35 @@ function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  // Establish the recovery session from the emailed link (PKCE code or token hash).
+  useEffect(() => {
+    let done = false;
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (s && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN")) { done = true; setReady(true); }
+    });
+    (async () => {
+      const url = new URL(window.location.href);
+      const hash = new URLSearchParams(url.hash.slice(1));
+      const errDesc = url.searchParams.get("error_description") ?? hash.get("error_description");
+      if (errDesc) { setLinkError(errDesc); return; }
+      const code = url.searchParams.get("code");
+      const tokenHash = url.searchParams.get("token_hash");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) { setLinkError(error.message); return; }
+      } else if (tokenHash) {
+        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
+        if (error) { setLinkError(error.message); return; }
+      }
+      const { data } = await supabase.auth.getSession();
+      if (data.session) { done = true; setReady(true); return; }
+      setTimeout(() => { if (!done) setLinkError("This reset link is invalid or has expired. Please request a new one."); }, 3000);
+    })();
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -44,13 +73,22 @@ function ResetPassword() {
     if (error) return toast.error(error.message);
     toast.success("Password updated. Please sign in again.");
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", search: { mode: "signin" }, replace: true });
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="glass-card w-full max-w-md rounded-3xl p-8 sm:p-10">
         <Logo />
+        {linkError ? (
+          <div className="mt-8 space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight">Reset link not valid</h2>
+            <p className="text-sm text-muted-foreground">{linkError}</p>
+            <Button onClick={() => navigate({ to: "/auth", search: { mode: "forgot" } })} className="w-full">Request a new link</Button>
+          </div>
+        ) : !ready ? (
+          <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Verifying reset link…</div>
+        ) : (
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Set a new password</h2>
@@ -69,6 +107,7 @@ function ResetPassword() {
             Update password
           </Button>
         </form>
+        )}
       </div>
     </div>
   );

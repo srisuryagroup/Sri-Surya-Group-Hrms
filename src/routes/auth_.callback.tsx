@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AuthCallback } from "./auth-callback";
+import { AuthCallback } from "@/components/auth-callback-view";
 
 export const Route = createFileRoute("/auth_/callback")({
   ssr: false,

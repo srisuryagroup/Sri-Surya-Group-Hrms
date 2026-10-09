@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/logo";
+import { SITE_URL, AUTH_CALLBACK_URL } from "@/lib/site";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -168,7 +169,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
       email: emailR.data,
       password: passR.data,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth-callback`,
+        emailRedirectTo: AUTH_CALLBACK_URL,
         data: { full_name: nameR.data, account_type: accountType },
       },
     });
@@ -243,7 +244,7 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
     if (!emailR.success) return toast.error(emailR.error.issues[0].message);
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(emailR.data, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${SITE_URL}/reset-password`,
     });
     setLoading(false);
     if (error) return toast.error(error.message);

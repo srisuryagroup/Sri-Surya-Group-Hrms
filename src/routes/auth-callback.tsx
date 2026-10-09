@@ -27,7 +27,7 @@ export const Route = createFileRoute("/auth-callback")({
   component: AuthCallback,
 });
 
-function AuthCallback() {
+export function AuthCallback() {
   const navigate = useNavigate();
   const handled = useRef(false);
   const [error, setError] = useState<string | null>(null);

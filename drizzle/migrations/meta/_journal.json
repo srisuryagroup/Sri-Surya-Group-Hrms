@@ -29,6 +29,13 @@
       "when": 1791832075119,
       "tag": "0003_task_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791832634195,
+      "tag": "0004_project_based_commissions",
+      "breakpoints": true
     }
   ]
 }

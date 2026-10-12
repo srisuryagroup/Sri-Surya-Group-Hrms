@@ -694,6 +694,8 @@ export type Database = {
         Row: {
           assignee_id: string
           assignee_type: string
+          commission_mode: string | null
+          commission_value: number | null
           created_at: string
           id: string
           project_id: string
@@ -702,6 +704,8 @@ export type Database = {
         Insert: {
           assignee_id: string
           assignee_type: string
+          commission_mode?: string | null
+          commission_value?: number | null
           created_at?: string
           id?: string
           project_id: string
@@ -710,6 +714,8 @@ export type Database = {
         Update: {
           assignee_id?: string
           assignee_type?: string
+          commission_mode?: string | null
+          commission_value?: number | null
           created_at?: string
           id?: string
           project_id?: string

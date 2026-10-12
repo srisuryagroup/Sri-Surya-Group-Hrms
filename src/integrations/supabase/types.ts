@@ -1009,6 +1009,7 @@ export type Database = {
     }
     Functions: {
       can_manage: { Args: { _user_id: string }; Returns: boolean }
+      can_view_task: { Args: { _task_id: string }; Returns: boolean }
       current_user_email: { Args: never; Returns: string }
       has_role: {
         Args: {

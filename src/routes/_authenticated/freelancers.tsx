@@ -41,6 +41,7 @@ type Freelancer = {
   skills?: string[] | null;
   experience_years?: number | null;
   hourly_rate?: number | null;
+  commission_percentage?: number | null;
   upi_id?: string | null;
   bank_name?: string | null;
   account_number?: string | null;
@@ -80,7 +81,7 @@ function FreelancersPage() {
     mutationFn: async (payload: Partial<Freelancer>) => {
       const cleaned: any = { ...payload };
       Object.keys(cleaned).forEach((k) => { if (cleaned[k] === "") cleaned[k] = null; });
-      if (typeof cleaned.hourly_rate === "string") cleaned.hourly_rate = cleaned.hourly_rate ? Number(cleaned.hourly_rate) : null;
+      if (typeof cleaned.commission_percentage === "string") cleaned.commission_percentage = cleaned.commission_percentage ? Number(cleaned.commission_percentage) : 0;
       if (typeof cleaned.experience_years === "string") cleaned.experience_years = cleaned.experience_years ? Number(cleaned.experience_years) : null;
       delete cleaned.freelancer_code;
       if (cleaned.id) {
@@ -178,7 +179,7 @@ function FreelancersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{r.experience_years ? `${r.experience_years} yr` : "—"}</TableCell>
-                    <TableCell className="text-sm">{r.hourly_rate ? `₹${Number(r.hourly_rate).toLocaleString("en-IN")}` : "—"}</TableCell>
+                    <TableCell className="text-sm">{Number(r.commission_percentage ?? 0) > 0 ? `${Number(r.commission_percentage)}%` : "Per project"}</TableCell>
                     <TableCell><AvailBadge v={r.availability} /></TableCell>
                     <TableCell className="text-right">
                       {isManager && (
@@ -226,7 +227,7 @@ function FreelancersPage() {
               <F label="Email" required><Input type="email" value={editing.email ?? ""} onChange={(e) => setEditing({ ...editing, email: e.target.value })} required /></F>
               <F label="Mobile"><Input value={editing.mobile ?? ""} onChange={(e) => setEditing({ ...editing, mobile: e.target.value })} /></F>
               <F label="Experience (years)"><Input type="number" step="0.5" value={editing.experience_years ?? ""} onChange={(e) => setEditing({ ...editing, experience_years: e.target.value as any })} /></F>
-              <F label="Hourly rate (₹)"><Input type="number" value={editing.hourly_rate ?? ""} onChange={(e) => setEditing({ ...editing, hourly_rate: e.target.value as any })} /></F>
+              <F label="Default commission % (used when a project has none)"><Input type="number" min="0" step="0.1" value={editing.commission_percentage ?? ""} onChange={(e) => setEditing({ ...editing, commission_percentage: e.target.value as any })} /></F>
               <F label="UPI ID"><Input value={editing.upi_id ?? ""} onChange={(e) => setEditing({ ...editing, upi_id: e.target.value })} /></F>
               <F label="Bank name"><Input value={editing.bank_name ?? ""} onChange={(e) => setEditing({ ...editing, bank_name: e.target.value })} /></F>
               <F label="Account number"><Input value={editing.account_number ?? ""} onChange={(e) => setEditing({ ...editing, account_number: e.target.value })} /></F>

@@ -240,6 +240,8 @@ function AssignTeamDialog({ project, canEdit, onClose }: { project: any | null; 
   const [type, setType] = useState<"employee" | "freelancer">("employee");
   const [pickId, setPickId] = useState("");
   const [role, setRole] = useState("");
+  const [cMode, setCMode] = useState<"percentage" | "fixed">("percentage");
+  const [cValue, setCValue] = useState("");
 
   const { data: employees } = useQuery({
     queryKey: ["employees-min"],
@@ -262,13 +264,18 @@ function AssignTeamDialog({ project, canEdit, onClose }: { project: any | null; 
       if (!pickId) throw new Error("Pick a person");
       const { error } = await db.from("project_assignments").insert({
         project_id: project.id, assignee_type: type, assignee_id: pickId, role: role || null,
+        ...(type === "freelancer" && cValue !== ""
+          ? { commission_mode: cMode, commission_value: Math.max(0, Number(cValue)) }
+          : {}),
       });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["project_assignments", project.id] });
       qc.invalidateQueries({ queryKey: ["project_assignments_all"] });
-      setPickId(""); setRole(""); toast.success("Assigned");
+      setPickId(""); setRole(""); setCValue("");
+      qc.invalidateQueries({ queryKey: ["commissions"] });
+      toast.success("Assigned");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -307,6 +314,9 @@ function AssignTeamDialog({ project, canEdit, onClose }: { project: any | null; 
                 <div className="text-sm font-medium truncate">{nameOf(a)}</div>
                 <div className="text-[11px] text-muted-foreground">
                   {a.assignee_type}{a.role ? ` • ${a.role}` : ""}
+                  {a.commission_mode && a.commission_value != null
+                    ? ` • Commission: ${a.commission_mode === "percentage" ? `${Number(a.commission_value)}%` : `₹${Number(a.commission_value).toLocaleString("en-IN")}`}`
+                    : ""}
                 </div>
               </div>
               {canEdit && (
@@ -339,6 +349,20 @@ function AssignTeamDialog({ project, canEdit, onClose }: { project: any | null; 
             <Button onClick={() => addMut.mutate()} disabled={addMut.isPending || !pickId} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
               {addMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             </Button>
+            {type === "freelancer" && (
+              <div className="grid grid-cols-[120px_1fr] gap-2 sm:col-span-4">
+                <Select value={cMode} onValueChange={(v) => setCMode(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="number" min="0" step="0.01"
+                  placeholder={cMode === "percentage" ? "Commission % of project budget" : "Fixed commission amount (₹)"}
+                  value={cValue} onChange={(e) => setCValue(e.target.value)} />
+              </div>
+            )}
           </div>
         )}
       </DialogContent>

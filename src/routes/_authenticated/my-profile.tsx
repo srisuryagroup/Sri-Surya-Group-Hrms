@@ -283,9 +283,8 @@ function FreelancerProfileForm({
             value={form.skills}
             onChange={(v) => setForm((f) => ({ ...f, skills: v }))}
           />
-          <Field label="Hourly rate" value={inr(record.hourly_rate)} disabled />
           <Field
-            label="Commission percentage"
+            label="Default commission percentage"
             value={`${Number(record.commission_percentage ?? 0)}%`}
             disabled
           />

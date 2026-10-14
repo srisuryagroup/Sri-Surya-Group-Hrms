@@ -52,7 +52,7 @@ export function FreelancerDashboard() {
       const comm = commissions.data ?? [];
       const sum = (status?: string) =>
         comm
-          .filter((c) => (status ? c.payment_status === status : true))
+          .filter((c) => (status ? c.payment_status === status : c.payment_status !== "cancelled"))
           .reduce((s, c) => s + Number(c.amount ?? 0), 0);
 
       const projects = (assignments.data ?? [])
@@ -110,7 +110,7 @@ export function FreelancerDashboard() {
               asChild
               className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90"
             >
-              <Link to="/earnings">View Earnings</Link>
+              <Link to="/bookings">Book a Job</Link>
             </Button>
           </>
         }
@@ -226,13 +226,13 @@ export function FreelancerDashboard() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Commission percentage</span>
+              <span className="text-muted-foreground">Default commission</span>
               <span className="font-semibold">
                 {Number(me?.commission_percentage ?? 0)}%
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total earnings</span>
+              <span className="text-muted-foreground">Earned (paid + pending)</span>
               <span className="font-semibold">{inr(data?.total ?? 0)}</span>
             </div>
             <div className="flex justify-between">

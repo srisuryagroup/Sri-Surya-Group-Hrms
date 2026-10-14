@@ -157,7 +157,7 @@ function FreelancersPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Skills</TableHead>
                   <TableHead>Experience</TableHead>
-                  <TableHead>Rate (₹/hr)</TableHead>
+                  <TableHead>Commission</TableHead>
                   <TableHead>Availability</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>

@@ -91,9 +91,82 @@ export type Database = {
           },
         ]
       }
+      bookings: {
+        Row: {
+          client_contact: string | null
+          client_name: string
+          commission_amount: number
+          created_at: string
+          created_by: string | null
+          deal_value: number
+          freelancer_id: string
+          id: string
+          notes: string | null
+          offering_id: string
+          paid_on: string | null
+          payment_status: string
+          review_note: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_contact?: string | null
+          client_name: string
+          commission_amount?: number
+          created_at?: string
+          created_by?: string | null
+          deal_value?: number
+          freelancer_id: string
+          id?: string
+          notes?: string | null
+          offering_id: string
+          paid_on?: string | null
+          payment_status?: string
+          review_note?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_contact?: string | null
+          client_name?: string
+          commission_amount?: number
+          created_at?: string
+          created_by?: string | null
+          deal_value?: number
+          freelancer_id?: string
+          id?: string
+          notes?: string | null
+          offering_id?: string
+          paid_on?: string | null
+          payment_status?: string
+          review_note?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "freelancers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commissions: {
         Row: {
           amount: number | null
+          booking_id: string | null
           commission_type: Database["public"]["Enums"]["commission_type"]
           created_at: string
           fixed_amount: number | null
@@ -110,6 +183,7 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          booking_id?: string | null
           commission_type: Database["public"]["Enums"]["commission_type"]
           created_at?: string
           fixed_amount?: number | null
@@ -126,6 +200,7 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          booking_id?: string | null
           commission_type?: Database["public"]["Enums"]["commission_type"]
           created_at?: string
           fixed_amount?: number | null
@@ -141,6 +216,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "commissions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commissions_project_id_fkey"
             columns: ["project_id"]
@@ -586,6 +668,45 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      offerings: {
+        Row: {
+          category: string
+          commission_mode: string
+          commission_value: number
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          commission_mode?: string
+          commission_value?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          commission_mode?: string
+          commission_value?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number | null
+          updated_at?: string
         }
         Relationships: []
       }

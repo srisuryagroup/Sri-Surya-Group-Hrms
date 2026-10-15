@@ -17,6 +17,7 @@ import {
   Send,
   Video,
   ShoppingBag,
+  Contact,
   type LucideIcon,
 } from "lucide-react";
 
@@ -68,6 +69,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/tasks", label: "Tasks", icon: CheckSquare, roles: ALL },
   { to: "/meetings", label: "Meetings", icon: Video, roles: ALL },
   { to: "/bookings", label: "Bookings", icon: ShoppingBag, roles: [...HR, "freelancer"] },
+  { to: "/leads", label: "Customer Leads", icon: Contact, roles: ALL },
   { to: "/my-work", label: "My Work", icon: Send, roles: ["employee", "freelancer"] },
   { to: "/earnings", label: "Earnings", icon: BadgeIndianRupee, roles: ["freelancer"] },
   {

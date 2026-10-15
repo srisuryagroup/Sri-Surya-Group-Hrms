@@ -43,6 +43,13 @@
       "when": 1791968214297,
       "tag": "0005_freelancer_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792051073182,
+      "tag": "0006_project_privacy",
+      "breakpoints": true
     }
   ]
 }

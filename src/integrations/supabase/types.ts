@@ -514,6 +514,60 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          created_at: string
+          email: string | null
+          follow_up_date: string | null
+          id: string
+          interest: string | null
+          location: string | null
+          mobile: string | null
+          name: string
+          notes: string | null
+          owner_id: string
+          owner_name: string | null
+          source: string | null
+          status: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interest?: string | null
+          location?: string | null
+          mobile?: string | null
+          name: string
+          notes?: string | null
+          owner_id?: string
+          owner_name?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interest?: string | null
+          location?: string | null
+          mobile?: string | null
+          name?: string
+          notes?: string | null
+          owner_id?: string
+          owner_name?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           created_at: string

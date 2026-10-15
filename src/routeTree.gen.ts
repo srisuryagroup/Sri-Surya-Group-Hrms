@@ -25,6 +25,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedEarningsRouteImport } from './routes/_authenticated/earnings'
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedFreelancersRouteImport } from './routes/_authenticated/freelancers'
+import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedLeaveRouteImport } from './routes/_authenticated/leave'
 import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticated/meetings'
 import { Route as AuthenticatedMyProfileRouteImport } from './routes/_authenticated/my-profile'
@@ -119,6 +120,11 @@ const AuthenticatedFreelancersRoute =
     path: '/freelancers',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedLeaveRoute = AuthenticatedLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/earnings': typeof AuthenticatedEarningsRoute
   '/employees': typeof AuthenticatedEmployeesRoute
   '/freelancers': typeof AuthenticatedFreelancersRoute
+  '/leads': typeof AuthenticatedLeadsRoute
   '/leave': typeof AuthenticatedLeaveRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/my-profile': typeof AuthenticatedMyProfileRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/earnings': typeof AuthenticatedEarningsRoute
   '/employees': typeof AuthenticatedEmployeesRoute
   '/freelancers': typeof AuthenticatedFreelancersRoute
+  '/leads': typeof AuthenticatedLeadsRoute
   '/leave': typeof AuthenticatedLeaveRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/my-profile': typeof AuthenticatedMyProfileRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/_authenticated/earnings': typeof AuthenticatedEarningsRoute
   '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
   '/_authenticated/freelancers': typeof AuthenticatedFreelancersRoute
+  '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/leave': typeof AuthenticatedLeaveRoute
   '/_authenticated/meetings': typeof AuthenticatedMeetingsRoute
   '/_authenticated/my-profile': typeof AuthenticatedMyProfileRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/earnings'
     | '/employees'
     | '/freelancers'
+    | '/leads'
     | '/leave'
     | '/meetings'
     | '/my-profile'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/earnings'
     | '/employees'
     | '/freelancers'
+    | '/leads'
     | '/leave'
     | '/meetings'
     | '/my-profile'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/_authenticated/earnings'
     | '/_authenticated/employees'
     | '/_authenticated/freelancers'
+    | '/_authenticated/leads'
     | '/_authenticated/leave'
     | '/_authenticated/meetings'
     | '/_authenticated/my-profile'
@@ -475,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFreelancersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/leads': {
+      id: '/_authenticated/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leave': {
       id: '/_authenticated/leave'
       path: '/leave'
@@ -565,6 +584,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEarningsRoute: typeof AuthenticatedEarningsRoute
   AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
   AuthenticatedFreelancersRoute: typeof AuthenticatedFreelancersRoute
+  AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedLeaveRoute: typeof AuthenticatedLeaveRoute
   AuthenticatedMeetingsRoute: typeof AuthenticatedMeetingsRoute
   AuthenticatedMyProfileRoute: typeof AuthenticatedMyProfileRoute
@@ -587,6 +607,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEarningsRoute: AuthenticatedEarningsRoute,
   AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
   AuthenticatedFreelancersRoute: AuthenticatedFreelancersRoute,
+  AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedLeaveRoute: AuthenticatedLeaveRoute,
   AuthenticatedMeetingsRoute: AuthenticatedMeetingsRoute,
   AuthenticatedMyProfileRoute: AuthenticatedMyProfileRoute,

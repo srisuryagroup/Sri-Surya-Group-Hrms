@@ -517,6 +517,11 @@ export type Database = {
       leads: {
         Row: {
           created_at: string
+          domain_checked_at: string | null
+          domain_expiry_date: string | null
+          domain_name: string | null
+          domain_registrar: string | null
+          domain_reminders_sent: Json
           email: string | null
           follow_up_date: string | null
           id: string
@@ -534,6 +539,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          domain_checked_at?: string | null
+          domain_expiry_date?: string | null
+          domain_name?: string | null
+          domain_registrar?: string | null
+          domain_reminders_sent?: Json
           email?: string | null
           follow_up_date?: string | null
           id?: string
@@ -551,6 +561,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          domain_checked_at?: string | null
+          domain_expiry_date?: string | null
+          domain_name?: string | null
+          domain_registrar?: string | null
+          domain_reminders_sent?: Json
           email?: string | null
           follow_up_date?: string | null
           id?: string

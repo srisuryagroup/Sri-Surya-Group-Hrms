@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { format, isBefore, isToday, parseISO } from "date-fns";
@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { checkDomainExpiry } from "@/lib/lead-domain.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { Globe, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/leads")({
   head: () => ({
@@ -57,9 +60,21 @@ const schema = z.object({
   location: z.string().trim().max(200), interest: z.string().trim().max(200), source: z.string().max(50),
   follow_up_date: z.string(), status: z.enum(["new", "contacted", "interested", "follow_up", "converted", "lost"]),
   notes: z.string().trim().max(2000),
+  domain_name: z.string().trim().max(255),
+  domain_registrar: z.string().trim().max(255),
+  domain_expiry_date: z.string(),
 });
-type Lead = z.infer<typeof schema> & { id?: string };
-const blank: Lead = { name: "", mobile: "", whatsapp: "", email: "", location: "", interest: "", source: "", follow_up_date: "", status: "new", notes: "" };
+type Lead = z.infer<typeof schema> & { id?: string; domain_reminders_sent?: number[] };
+const blank: Lead = { name: "", mobile: "", whatsapp: "", email: "", location: "", interest: "", source: "", follow_up_date: "", status: "new", notes: "", domain_name: "", domain_registrar: "", domain_expiry_date: "" };
+
+const REMINDER_DAYS = [30, 15, 7] as const;
+function daysUntil(dateStr?: string | null): number | null {
+  if (!dateStr) return null;
+  const d = parseISO(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((d.getTime() - today.getTime()) / 86400000);
+}
 
 function LeadsPage() {
   const { user, isManager } = useAuth();
@@ -68,6 +83,22 @@ function LeadsPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [view, setView] = useState("all");
+  const [checkingDomain, setCheckingDomain] = useState(false);
+  const runDomainCheck = useServerFn(checkDomainExpiry);
+
+  const lookupDomain = async () => {
+    if (!editing?.domain_name?.trim()) { toast.error("Enter a domain name first"); return; }
+    setCheckingDomain(true);
+    try {
+      const res = await runDomainCheck({ data: { domain: editing.domain_name } });
+      setEditing({ ...editing, domain_expiry_date: res.expiryDate, domain_registrar: res.registrar ?? editing.domain_registrar });
+      toast.success("Expiry date found");
+    } catch (e: any) {
+      toast.error(e.message ?? "Lookup failed");
+    } finally {
+      setCheckingDomain(false);
+    }
+  };
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["leads", user?.id],
@@ -91,6 +122,10 @@ function LeadsPage() {
       Object.keys(c).forEach((k) => { if (c[k] === "") c[k] = null; });
       c.status = parsed.data.status;
       if (l.id) {
+        // Keep already-sent reminder markers across edits; reset them if the expiry date changed.
+        const prev = (rows ?? []).find((r) => r.id === l.id);
+        const prevSent = (prev?.domain_reminders_sent as number[] | null) ?? [];
+        c.domain_reminders_sent = prev?.domain_expiry_date === parsed.data.domain_expiry_date ? prevSent : [];
         const { error } = await db.from("leads").update(c).eq("id", l.id);
         if (error) throw error;
       } else {
@@ -108,6 +143,33 @@ function LeadsPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["leads"] }); toast.success("Lead deleted"); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  // Send 30/15/7-day domain renewal reminders to the lead owner (once per threshold per expiry date).
+  useEffect(() => {
+    if (!rows || !user) return;
+    for (const r of rows as any[]) {
+      const days = daysUntil(r.domain_expiry_date);
+      if (days === null || days < 0) continue;
+      const sent: number[] = (r.domain_reminders_sent as number[] | null) ?? [];
+      const due = REMINDER_DAYS.filter((t) => days <= t && !sent.includes(t));
+      if (due.length === 0) continue;
+      const threshold = Math.min(...due);
+      const recipient = r.owner_id ?? user.id;
+      if (recipient !== user.id) continue; // only the owner generates their own reminders
+      const domain = r.domain_name ?? "domain";
+      db.from("notifications").insert({
+        user_id: recipient,
+        title: `Domain renewal: ${domain}`,
+        message: `The domain ${domain} for lead "${r.name}" expires in ${days} day${days === 1 ? "" : "s"} (${r.domain_expiry_date}). Please arrange renewal.`,
+        category: "domain_renewal",
+      }).then(({ error }: any) => {
+        if (error) return;
+        db.from("leads").update({ domain_reminders_sent: [...sent, threshold] }).eq("id", r.id).then(() => {
+          qc.invalidateQueries({ queryKey: ["leads"] });
+        });
+      });
+    }
+  }, [rows, user, qc]);
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const isDue = (r: any) => r.follow_up_date && !["converted", "lost"].includes(r.status) && !isBefore(today, parseISO(r.follow_up_date)) ;
@@ -181,6 +243,26 @@ function LeadsPage() {
                     {r.location && <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{r.location}</div>}
                   </div>
                   {r.notes && <p className="line-clamp-2 text-sm text-muted-foreground">{r.notes}</p>}
+                  {r.domain_name && (() => {
+                    const days = daysUntil(r.domain_expiry_date);
+                    const cls = days === null ? "text-muted-foreground" : days < 0 ? "text-destructive" : days <= 7 ? "text-destructive" : days <= 15 ? "text-warning" : days <= 30 ? "text-warning" : "text-muted-foreground";
+                    return (
+                      <div className={`space-y-0.5 rounded-lg border border-border/40 bg-muted/30 p-2.5 text-xs ${cls}`}>
+                        <div className="flex items-center gap-1.5 font-medium text-foreground"><Globe className="h-3.5 w-3.5" />{r.domain_name}</div>
+                        {r.domain_registrar && <div>Registrar: {r.domain_registrar}</div>}
+                        {r.domain_expiry_date && (
+                          <div>
+                            Expires {format(parseISO(r.domain_expiry_date), "dd MMM yyyy")}
+                            {days !== null && (
+                              <span className="ml-1 font-semibold">
+                                {days < 0 ? `· expired ${-days}d ago` : `· ${days} day${days === 1 ? "" : "s"} left`}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
                     <span className={`flex items-center gap-1.5 ${overdue ? "text-destructive" : d && isToday(d) ? "text-warning" : "text-muted-foreground"}`}>
                       <CalendarClock className="h-3.5 w-3.5" />
@@ -233,6 +315,17 @@ function LeadsPage() {
                 </Select>
               </F>
               <F label="Notes" full><Textarea rows={3} maxLength={2000} value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} /></F>
+              <F label="Customer domain name" full>
+                <div className="flex gap-2">
+                  <Input placeholder="example.com" maxLength={255} value={editing.domain_name} onChange={(e) => setEditing({ ...editing, domain_name: e.target.value })} />
+                  <Button type="button" variant="outline" disabled={checkingDomain} onClick={lookupDomain} className="shrink-0">
+                    {checkingDomain ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4" />}
+                    Check expiry
+                  </Button>
+                </div>
+              </F>
+              <F label="Registrar"><Input maxLength={255} placeholder="Auto-filled by lookup" value={editing.domain_registrar} onChange={(e) => setEditing({ ...editing, domain_registrar: e.target.value })} /></F>
+              <F label="Domain expiry date"><Input type="date" value={editing.domain_expiry_date} onChange={(e) => setEditing({ ...editing, domain_expiry_date: e.target.value })} /></F>
               <DialogFooter className="sm:col-span-2">
                 <Button type="submit" disabled={save.isPending} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
                   {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editing.id ? "Save" : "Add customer"}

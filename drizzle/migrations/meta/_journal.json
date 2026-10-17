@@ -57,6 +57,13 @@
       "when": 1792051280269,
       "tag": "0007_customer_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792213416389,
+      "tag": "0008_lead_domain_tracking",
+      "breakpoints": true
     }
   ]
 }

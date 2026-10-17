@@ -83,6 +83,22 @@ function LeadsPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [view, setView] = useState("all");
+  const [checkingDomain, setCheckingDomain] = useState(false);
+  const runDomainCheck = useServerFn(checkDomainExpiry);
+
+  const lookupDomain = async () => {
+    if (!editing?.domain_name?.trim()) { toast.error("Enter a domain name first"); return; }
+    setCheckingDomain(true);
+    try {
+      const res = await runDomainCheck({ data: { domain: editing.domain_name } });
+      setEditing({ ...editing, domain_expiry_date: res.expiryDate, domain_registrar: res.registrar ?? editing.domain_registrar });
+      toast.success("Expiry date found");
+    } catch (e: any) {
+      toast.error(e.message ?? "Lookup failed");
+    } finally {
+      setCheckingDomain(false);
+    }
+  };
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["leads", user?.id],

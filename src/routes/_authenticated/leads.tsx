@@ -60,9 +60,21 @@ const schema = z.object({
   location: z.string().trim().max(200), interest: z.string().trim().max(200), source: z.string().max(50),
   follow_up_date: z.string(), status: z.enum(["new", "contacted", "interested", "follow_up", "converted", "lost"]),
   notes: z.string().trim().max(2000),
+  domain_name: z.string().trim().max(255),
+  domain_registrar: z.string().trim().max(255),
+  domain_expiry_date: z.string(),
 });
-type Lead = z.infer<typeof schema> & { id?: string };
-const blank: Lead = { name: "", mobile: "", whatsapp: "", email: "", location: "", interest: "", source: "", follow_up_date: "", status: "new", notes: "" };
+type Lead = z.infer<typeof schema> & { id?: string; domain_reminders_sent?: number[] };
+const blank: Lead = { name: "", mobile: "", whatsapp: "", email: "", location: "", interest: "", source: "", follow_up_date: "", status: "new", notes: "", domain_name: "", domain_registrar: "", domain_expiry_date: "" };
+
+const REMINDER_DAYS = [30, 15, 7] as const;
+function daysUntil(dateStr?: string | null): number | null {
+  if (!dateStr) return null;
+  const d = parseISO(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((d.getTime() - today.getTime()) / 86400000);
+}
 
 function LeadsPage() {
   const { user, isManager } = useAuth();

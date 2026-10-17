@@ -106,6 +106,10 @@ function LeadsPage() {
       Object.keys(c).forEach((k) => { if (c[k] === "") c[k] = null; });
       c.status = parsed.data.status;
       if (l.id) {
+        // Keep already-sent reminder markers across edits; reset them if the expiry date changed.
+        const prev = (rows ?? []).find((r) => r.id === l.id);
+        const prevSent = (prev?.domain_reminders_sent as number[] | null) ?? [];
+        c.domain_reminders_sent = prev?.domain_expiry_date === parsed.data.domain_expiry_date ? prevSent : [];
         const { error } = await db.from("leads").update(c).eq("id", l.id);
         if (error) throw error;
       } else {

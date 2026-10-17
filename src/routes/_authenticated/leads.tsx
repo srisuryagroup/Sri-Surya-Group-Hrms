@@ -315,6 +315,17 @@ function LeadsPage() {
                 </Select>
               </F>
               <F label="Notes" full><Textarea rows={3} maxLength={2000} value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} /></F>
+              <F label="Customer domain name" full>
+                <div className="flex gap-2">
+                  <Input placeholder="example.com" maxLength={255} value={editing.domain_name} onChange={(e) => setEditing({ ...editing, domain_name: e.target.value })} />
+                  <Button type="button" variant="outline" disabled={checkingDomain} onClick={lookupDomain} className="shrink-0">
+                    {checkingDomain ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4" />}
+                    Check expiry
+                  </Button>
+                </div>
+              </F>
+              <F label="Registrar"><Input maxLength={255} placeholder="Auto-filled by lookup" value={editing.domain_registrar} onChange={(e) => setEditing({ ...editing, domain_registrar: e.target.value })} /></F>
+              <F label="Domain expiry date"><Input type="date" value={editing.domain_expiry_date} onChange={(e) => setEditing({ ...editing, domain_expiry_date: e.target.value })} /></F>
               <DialogFooter className="sm:col-span-2">
                 <Button type="submit" disabled={save.isPending} className="bg-gradient-surya text-primary-foreground surya-glow hover:opacity-90">
                   {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editing.id ? "Save" : "Add customer"}

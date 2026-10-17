@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { checkDomainExpiry } from "@/lib/lead-domain.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { Globe, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/leads")({
   head: () => ({

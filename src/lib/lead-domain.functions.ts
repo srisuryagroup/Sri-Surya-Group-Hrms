@@ -26,7 +26,12 @@ export const checkDomainExpiry = createServerFn({ method: "POST" })
     return { domain };
   })
   .handler(async ({ data }) => {
-    const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(data.domain)}`, {
+    // rdap.org blocks server requests (403); resolve the TLD's own RDAP service via the IANA bootstrap.
+    const tld = data.domain.split(".").pop()!;
+    const bootstrap = await (await fetch("https://data.iana.org/rdap/dns.json")).json() as { services: [string[], string[]][] };
+    const service = bootstrap.services.find((s) => s[0].includes(tld));
+    if (!service) throw new Error("No lookup service for this domain extension.");
+    const res = await fetch(`${service[1][0]}domain/${encodeURIComponent(data.domain)}`, {
       headers: { Accept: "application/rdap+json, application/json" },
     });
     if (res.status === 404) throw new Error("Domain not found — it may be available or unregistered.");

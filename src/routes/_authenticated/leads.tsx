@@ -128,6 +128,33 @@ function LeadsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Send 30/15/7-day domain renewal reminders to the lead owner (once per threshold per expiry date).
+  useEffect(() => {
+    if (!rows || !user) return;
+    for (const r of rows as any[]) {
+      const days = daysUntil(r.domain_expiry_date);
+      if (days === null || days < 0) continue;
+      const sent: number[] = (r.domain_reminders_sent as number[] | null) ?? [];
+      const due = REMINDER_DAYS.filter((t) => days <= t && !sent.includes(t));
+      if (due.length === 0) continue;
+      const threshold = Math.min(...due);
+      const recipient = r.owner_id ?? user.id;
+      if (recipient !== user.id) continue; // only the owner generates their own reminders
+      const domain = r.domain_name ?? "domain";
+      db.from("notifications").insert({
+        user_id: recipient,
+        title: `Domain renewal: ${domain}`,
+        message: `The domain ${domain} for lead "${r.name}" expires in ${days} day${days === 1 ? "" : "s"} (${r.domain_expiry_date}). Please arrange renewal.`,
+        category: "domain_renewal",
+      }).then(({ error }: any) => {
+        if (error) return;
+        db.from("leads").update({ domain_reminders_sent: [...sent, threshold] }).eq("id", r.id).then(() => {
+          qc.invalidateQueries({ queryKey: ["leads"] });
+        });
+      });
+    }
+  }, [rows, user, qc]);
+
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const isDue = (r: any) => r.follow_up_date && !["converted", "lost"].includes(r.status) && !isBefore(today, parseISO(r.follow_up_date)) ;
   const term = q.trim().toLowerCase();

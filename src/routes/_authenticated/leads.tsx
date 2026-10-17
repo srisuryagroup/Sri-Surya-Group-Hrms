@@ -227,6 +227,26 @@ function LeadsPage() {
                     {r.location && <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{r.location}</div>}
                   </div>
                   {r.notes && <p className="line-clamp-2 text-sm text-muted-foreground">{r.notes}</p>}
+                  {r.domain_name && (() => {
+                    const days = daysUntil(r.domain_expiry_date);
+                    const cls = days === null ? "text-muted-foreground" : days < 0 ? "text-destructive" : days <= 7 ? "text-destructive" : days <= 15 ? "text-warning" : days <= 30 ? "text-warning" : "text-muted-foreground";
+                    return (
+                      <div className={`space-y-0.5 rounded-lg border border-border/40 bg-muted/30 p-2.5 text-xs ${cls}`}>
+                        <div className="flex items-center gap-1.5 font-medium text-foreground"><Globe className="h-3.5 w-3.5" />{r.domain_name}</div>
+                        {r.domain_registrar && <div>Registrar: {r.domain_registrar}</div>}
+                        {r.domain_expiry_date && (
+                          <div>
+                            Expires {format(parseISO(r.domain_expiry_date), "dd MMM yyyy")}
+                            {days !== null && (
+                              <span className="ml-1 font-semibold">
+                                {days < 0 ? `· expired ${-days}d ago` : `· ${days} day${days === 1 ? "" : "s"} left`}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
                     <span className={`flex items-center gap-1.5 ${overdue ? "text-destructive" : d && isToday(d) ? "text-warning" : "text-muted-foreground"}`}>
                       <CalendarClock className="h-3.5 w-3.5" />
